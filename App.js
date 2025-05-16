@@ -1,23 +1,22 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, View, SafeAreaView } from "react-native";
 import "./global.css";
-import Tester from "./pages/tester";
-import Hello from "./pages/hello";
+import TestSupabase from "./pages/testSupabase";
 
 export default function App() {
-  return (
-    <View className="flex-1 items-center justify-center bg-blue-300">
-      <Tester />
-      <Hello />
-    </View>
-  );
+	return (
+		<SafeAreaView style={styles.container}>
+			<View className='flex-1 bg-blue-300'>
+				<TestSupabase />
+				<StatusBar style='auto' />
+			</View>
+		</SafeAreaView>
+	);
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+	container: {
+		flex: 1,
+		backgroundColor: "#fff",
+	},
 });
