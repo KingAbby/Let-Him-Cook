@@ -1,19 +1,47 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import { ROUTES } from './routes';
-import StackNavigator from './StackNavigator';
-import BottomTabNavigator from './BottomTabNavigator';
+import React from "react";
+import { createStackNavigator } from "@react-navigation/stack";
+import { ROUTES } from "./routes";
+import BottomTabNavigator from "./BottomTabNavigator";
+import { useAuth } from "../../context/AuthContext";
+import LoginScreen from "../../pages/LoginScreen";
+import RegisterScreen from "../../pages/RegisterScreen";
+import { ActivityIndicator, View } from "react-native";
+
+// Pastikan ini hanya diimpor jika file benar-benar ada
+// import TestSupabase from '../../pages/testSupabase';
 
 const RootStack = createStackNavigator();
+const AuthStack = createStackNavigator();
+
+const AuthNavigator = () => {
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
+      <AuthStack.Screen name={ROUTES.REGISTER} component={RegisterScreen} />
+    </AuthStack.Navigator>
+  );
+};
 
 const RootNavigator = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
     return (
-        <RootStack.Navigator screenOptions={{ headerShown: false }}>
-            {/* Change this to StackNavigator if you want to start with auth screens */}
-            <RootStack.Screen name="MainApp" component={BottomTabNavigator} />
-            <RootStack.Screen name="Auth" component={StackNavigator} />
-        </RootStack.Navigator>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#1482D1" />
+      </View>
     );
+  }
+
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      {user ? (
+        <RootStack.Screen name="MainApp" component={BottomTabNavigator} />
+      ) : (
+        <RootStack.Screen name="Auth" component={AuthNavigator} />
+      )}
+    </RootStack.Navigator>
+  );
 };
 
 export default RootNavigator;
