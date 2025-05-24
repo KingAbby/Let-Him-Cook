@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { RecipeHeader } from '../components/notesScreen/RecipeHeader';
+import { ImageUploader } from '../components/notesScreen/ImageUploader';
+import { IngredientItem } from '../components/notesScreen/IngredientItem';
+import { CookingStepItem } from '../components/notesScreen/CookingStepItem';
+import { TimeInput } from '../components/notesScreen/TimeInput';
+import { FormField } from '../components/notesScreen/FormField';
+import { SectionHeader } from '../components/notesScreen/SectionHeader';
+import { CategoryInput } from '../components/notesScreen/CategoryInput';
+import { supabase } from '../utils/supabase';
+import { useAuth } from '../context/AuthContext';
 
 interface Ingredient {
   id: string;
@@ -25,16 +27,17 @@ interface CookingStep {
   description: string;
 }
 
-const NotesScreen = () => {
+const NotesScreen: React.FC = () => {
+  const { user } = useAuth();
   const [recipeName, setRecipeName] = useState('');
   const [description, setDescription] = useState('');
-  const [prepTime, setPrepTime] = useState('15');
-  const [cookTime, setCookTime] = useState('30');
-  const [servings, setServings] = useState('2-4');
-  const [difficulty, setDifficulty] = useState('Mudah');
+  const [prepTime, setPrepTime] = useState('');
+  const [cookTime, setCookTime] = useState('');
+  const [servings, setServings] = useState('');
   const [category, setCategory] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  
+  const [saving, setSaving] = useState(false);
+
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { id: '1', amount: '', unit: '', name: '' },
     { id: '2', amount: '', unit: '', name: '' },
@@ -75,7 +78,7 @@ const NotesScreen = () => {
   };
 
   const updateIngredient = (id: string, field: keyof Ingredient, value: string) => {
-    setIngredients(ingredients.map(ing => 
+    setIngredients(ingredients.map(ing =>
       ing.id === id ? { ...ing, [field]: value } : ing
     ));
   };
@@ -89,258 +92,297 @@ const NotesScreen = () => {
   };
 
   const updateCookingStep = (id: string, description: string) => {
-    setCookingSteps(cookingSteps.map(step => 
+    setCookingSteps(cookingSteps.map(step =>
       step.id === id ? { ...step, description } : step
     ));
   };
 
-  const saveRecipe = () => {
-    if (!recipeName.trim()) {
-      Alert.alert('Error', 'Nama masakan harus diisi');
-      return;
-    }
+  const uploadImage = async (imageUri: string): Promise<string | null> => {
+  try {
+    // Create FormData for React Native
+    const formData = new FormData();
     
-    // Implement save logic here
-    Alert.alert('Berhasil', 'Resep berhasil disimpan');
+    // Get file extension
+    const fileExtension = imageUri.split('.').pop() || 'jpg';
+    const fileName = `recipe_${Date.now()}.${fileExtension}`;
+    
+    // Append file to FormData
+    formData.append('file', {
+      uri: imageUri,
+      type: `image/${fileExtension}`,
+      name: fileName,
+    } as any);
+
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('recipe-images')
+      .upload(fileName, formData, {
+        contentType: `image/${fileExtension}`,
+      });
+
+    if (error) {
+      console.error('Supabase storage error:', error);
+      return null;
+    }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('recipe-images')
+        .getPublicUrl(fileName);
+
+      return publicUrlData?.publicUrl ?? null;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
   };
 
-  const DifficultyButton = ({ level, isSelected, onPress }: { level: string; isSelected: boolean; onPress: () => void }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      className={`px-4 py-2 rounded-full border ${
-        isSelected 
-          ? 'bg-green-100 border-green-500' 
-          : 'bg-gray-100 border-gray-300'
-      }`}
-    >
-      <Text className={`text-sm ${isSelected ? 'text-green-700' : 'text-gray-600'}`}>
-        {level}
-      </Text>
-    </TouchableOpacity>
-  );
+  const validateForm = (): boolean => {
+    if (!recipeName.trim()) {
+      Alert.alert('Error', 'Recipe name is required');
+      return false;
+    }
+
+    // Check if at least one ingredient has all fields filled
+    const validIngredients = ingredients.filter(ing => 
+      ing.amount.trim() && ing.unit.trim() && ing.name.trim()
+    );
+    
+    if (validIngredients.length === 0) {
+      Alert.alert('Error', 'Please add at least one complete ingredient');
+      return false;
+    }
+
+    // Check if at least one cooking step is filled
+    const validSteps = cookingSteps.filter(step => step.description.trim());
+    
+    if (validSteps.length === 0) {
+      Alert.alert('Error', 'Please add at least one cooking step');
+      return false;
+    }
+
+    return true;
+  };
+
+  const saveRecipe = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to save a recipe');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // Upload image if exists
+      let imageUrl: string | null = null;
+      if (imageUri) {
+        imageUrl = await uploadImage(imageUri);
+      }
+
+      // Filter out empty ingredients and steps
+      const validIngredients = ingredients.filter(ing => 
+        ing.amount.trim() && ing.unit.trim() && ing.name.trim()
+      );
+      
+      const validSteps = cookingSteps.filter(step => 
+        step.description.trim()
+      );
+
+      // Prepare data for database
+      const recipeData = {
+        title: recipeName.trim(),
+        description: description.trim() || null,
+        prep_time: prepTime ? parseInt(prepTime) : null,
+        cook_time: cookTime ? parseInt(cookTime) : null,
+        servings: servings.trim() || null,
+        category: category.trim() || null,
+        image_url: imageUrl,
+        ingredients: validIngredients,
+        cooking_steps: validSteps,
+        user_id: user.id
+      };
+
+      // Insert recipe into database
+      const { data, error } = await supabase
+        .from('myrecipes')
+        .insert([recipeData])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      Alert.alert(
+        'Success', 
+        'Recipe saved successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Reset form
+              setRecipeName('');
+              setDescription('');
+              setPrepTime('');
+              setCookTime('');
+              setServings('');
+              setCategory('');
+              setImageUri(null);
+              setIngredients([
+                { id: '1', amount: '', unit: '', name: '' },
+                { id: '2', amount: '', unit: '', name: '' },
+                { id: '3', amount: '', unit: '', name: '' },
+              ]);
+              setCookingSteps([
+                { id: '1', step: 1, description: '' },
+                { id: '2', step: 2, description: '' },
+                { id: '3', step: 3, description: '' },
+              ]);
+            }
+          }
+        ]
+      );
+
+      } catch (error: any) {
+      console.error('Error saving recipe:', error);
+      Alert.alert('Error', 'Failed to save recipe. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-        <Text className="text-lg font-semibold">Tambah Resep</Text>
-        <TouchableOpacity onPress={saveRecipe}>
-          <Text className="text-green-600 font-medium">Simpan</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView className="flex-1 px-4">
+      {/* Header menggunakan komponen */}
+      <RecipeHeader
+        title="Add Your Own Recipe"
+      />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Image Upload */}
-        <TouchableOpacity 
-          onPress={pickImage}
-          className="mx-4 mt-4 h-40 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 justify-center items-center"
-        >
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} className="w-full h-full rounded-lg" />
-          ) : (
-            <View className="items-center">
-              <Ionicons name="camera-outline" size={40} color="#9CA3AF" />
-              <Text className="text-gray-500 mt-2">Tambah Foto Masakan</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        {/* Image Upload menggunakan komponen */}
+        <ImageUploader
+          imageUri={imageUri}
+          onImageSelected={setImageUri}
+        />
 
-        {/* Recipe Name */}
-        <View className="mx-4 mt-6">
-          <Text className="text-gray-700 font-medium mb-2">Nama Masakan</Text>
-          <TextInput
-            value={recipeName}
-            onChangeText={setRecipeName}
-            placeholder="Contoh: Nasi Goreng Spesial"
-            className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
-          />
-        </View>
+        {/* Form Fields menggunakan komponen */}
+        <FormField
+          label="Recipe Name"
+          value={recipeName}
+          onChangeText={setRecipeName}
+          placeholder="Example: Fried Rice"
+        />
 
-        {/* Description */}
-        <View className="mx-4 mt-4">
-          <Text className="text-gray-700 font-medium mb-2">Deskripsi</Text>
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Ceritakan tentang resep masakan Anda"
-            multiline
-            numberOfLines={3}
-            className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
-            textAlignVertical="top"
-          />
-        </View>
+        <FormField
+          label="Description"
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Tell us about your recipes"
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
 
-        {/* Time and Servings */}
+        {/* Time Inputs menggunakan komponen */}
         <View className="mx-4 mt-4 flex-row">
-          <View className="flex-1 mr-2">
-            <Text className="text-gray-700 font-medium mb-2">Waktu Persiapan</Text>
-            <View className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-row items-center">
-              <Ionicons name="time-outline" size={20} color="#6B7280" />
-              <TextInput
-                value={prepTime}
-                onChangeText={setPrepTime}
-                className="ml-2 flex-1"
-                keyboardType="numeric"
-              />
-              <Text className="text-gray-500">menit</Text>
-            </View>
-          </View>
-          
-          <View className="flex-1 ml-2">
-            <Text className="text-gray-700 font-medium mb-2">Waktu Memasak</Text>
-            <View className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-row items-center">
-              <Ionicons name="time-outline" size={20} color="#6B7280" />
-              <TextInput
-                value={cookTime}
-                onChangeText={setCookTime}
-                className="ml-2 flex-1"
-                keyboardType="numeric"
-              />
-              <Text className="text-gray-500">menit</Text>
-            </View>
-          </View>
+          <TimeInput
+            label="Preparation Time"
+            value={prepTime}
+            onChangeText={setPrepTime}
+            placeholder="15"
+          />
+          <View className="w-4" />
+          <TimeInput
+            label="Cooking Time"
+            value={cookTime}
+            onChangeText={setCookTime}
+            placeholder="30"
+          />
         </View>
 
         {/* Servings */}
         <View className="mx-4 mt-4">
-          <Text className="text-gray-700 font-medium mb-2">Porsi</Text>
-          <View className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-row items-center">
-            <Ionicons name="restaurant-outline" size={20} color="#6B7280" />
-            <TextInput
-              value={servings}
-              onChangeText={setServings}
-              placeholder="2-4 porsi"
-              className="ml-2 flex-1"
-            />
-          </View>
+          <Text className="text-gray-700 font-medium">Portion</Text>
+          <FormField
+            label=""
+            value={servings}
+            onChangeText={setServings}
+            placeholder="2-4 portion"
+            containerStyle="mt-0"
+          />
         </View>
 
-        {/* Ingredients */}
+        {/* Ingredients menggunakan komponen */}
         <View className="mx-4 mt-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-semibold">Bahan-bahan</Text>
-            <TouchableOpacity 
-              onPress={addIngredient}
-              className="flex-row items-center"
-            >
-              <Ionicons name="add-circle" size={20} color="#10B981" />
-              <Text className="text-green-600 font-medium ml-1">Tambah Bahan</Text>
-            </TouchableOpacity>
-          </View>
+          <SectionHeader
+            title="Ingredients"
+            buttonText="Add More Ingredients"
+            onButtonPress={addIngredient}
+          />
 
-          {ingredients.map((ingredient, index) => (
-            <View key={ingredient.id} className="flex-row items-center mb-3">
-              <View className="w-16 bg-gray-50 px-2 py-2 rounded border border-gray-200 mr-2">
-                <TextInput
-                  value={ingredient.amount}
-                  onChangeText={(value) => updateIngredient(ingredient.id, 'amount', value)}
-                  placeholder="100"
-                  className="text-center text-sm"
-                  keyboardType="numeric"
-                />
-              </View>
-              
-              <View className="w-20 bg-gray-50 px-2 py-2 rounded border border-gray-200 mr-2">
-                <TextInput
-                  value={ingredient.unit}
-                  onChangeText={(value) => updateIngredient(ingredient.id, 'unit', value)}
-                  placeholder="gram"
-                  className="text-center text-sm"
-                />
-              </View>
-              
-              <View className="flex-1 bg-gray-50 px-3 py-2 rounded border border-gray-200 mr-2">
-                <TextInput
-                  value={ingredient.name}
-                  onChangeText={(value) => updateIngredient(ingredient.id, 'name', value)}
-                  placeholder="Nama bahan"
-                  className="text-sm"
-                />
-              </View>
-
-              {ingredients.length > 1 && (
-                <TouchableOpacity 
-                  onPress={() => removeIngredient(ingredient.id)}
-                  className="p-1"
-                >
-                  <Ionicons name="close-circle" size={20} color="#EF4444" />
-                </TouchableOpacity>
-              )}
-            </View>
+          {ingredients.map((ingredient) => (
+            <IngredientItem
+              key={ingredient.id}
+              ingredient={ingredient}
+              onUpdate={updateIngredient}
+              onRemove={removeIngredient}
+              showRemoveButton={ingredients.length > 1}
+            />
           ))}
         </View>
 
-        {/* Cooking Steps */}
+        {/* Cooking Steps menggunakan komponen */}
         <View className="mx-4 mt-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-semibold">Cara Memasak</Text>
-            <TouchableOpacity 
-              onPress={addCookingStep}
-              className="flex-row items-center"
-            >
-              <Ionicons name="add-circle" size={20} color="#10B981" />
-              <Text className="text-green-600 font-medium ml-1">Tambah Langkah</Text>
-            </TouchableOpacity>
-          </View>
+          <SectionHeader
+            title="How to Cook"
+            buttonText="Add More Steps"
+            onButtonPress={addCookingStep}
+          />
 
           {cookingSteps.map((step) => (
-            <View key={step.id} className="flex-row mb-4">
-              <View className="w-8 h-8 bg-green-600 rounded-full items-center justify-center mr-3 mt-1">
-                <Text className="text-white font-bold text-sm">{step.step}</Text>
-              </View>
-              
-              <View className="flex-1">
-                <Text className="font-medium text-gray-800 mb-1">Langkah {step.step}</Text>
-                <TextInput
-                  value={step.description}
-                  onChangeText={(value) => updateCookingStep(step.id, value)}
-                  placeholder="Jelaskan langkah memasak..."
-                  multiline
-                  className="bg-gray-50 px-3 py-2 rounded border border-gray-200 min-h-[60px]"
-                  textAlignVertical="top"
-                />
-              </View>
-            </View>
+            <CookingStepItem
+              key={step.id}
+              step={step}
+              onUpdate={updateCookingStep}
+            />
           ))}
         </View>
 
         {/* Additional Information */}
         <View className="mx-4 mt-6 mb-8">
-          <Text className="text-lg font-semibold mb-4">Informasi Tambahan</Text>
-          
+          <Text className="text-lg font-semibold mb-4">Additional Information</Text>
+
           {/* Category */}
           <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Kategori</Text>
-            <TouchableOpacity className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <Ionicons name="restaurant" size={20} color="#6B7280" />
-                <Text className="ml-2 text-gray-500">Pilih kategori</Text>
-              </View>
-              <Ionicons name="chevron-down" size={20} color="#6B7280" />
+            <CategoryInput
+              label="Category"
+              value={category}
+              onChangeText={setCategory}
+              placeholder="Example: Main Course"
+            />
+          </View>
+
+          {/* Save button moved to bottom */}
+          <View className="mx-4 mt-6 mb-8">
+            <TouchableOpacity
+              onPress={saveRecipe}
+              disabled={saving}
+              className={`${saving ? 'bg-gray-400' : 'bg-green-600'} rounded-lg py-4 items-center`}
+            >
+              {saving ? (
+                <View className="flex-row items-center">
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text className="text-white font-medium text-lg ml-2">Saving...</Text>
+                </View>
+              ) : (
+                <Text className="text-white font-medium text-lg">Save Your Recipe</Text>
+              )}
             </TouchableOpacity>
           </View>
 
-          {/* Difficulty */}
-          <View>
-            <Text className="text-gray-700 font-medium mb-2">Tingkat Kesulitan</Text>
-            <View className="flex-row space-x-3">
-              <DifficultyButton 
-                level="Mudah" 
-                isSelected={difficulty === 'Mudah'} 
-                onPress={() => setDifficulty('Mudah')}
-              />
-              <DifficultyButton 
-                level="Sedang" 
-                isSelected={difficulty === 'Sedang'} 
-                onPress={() => setDifficulty('Sedang')}
-              />
-              <DifficultyButton 
-                level="Sulit" 
-                isSelected={difficulty === 'Sulit'} 
-                onPress={() => setDifficulty('Sulit')}
-              />
-            </View>
-          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
