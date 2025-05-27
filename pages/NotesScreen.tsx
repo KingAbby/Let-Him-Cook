@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, StatusBar, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { RecipeHeader } from '../components/notesScreen/RecipeHeader';
+import Header from '../components/Header';
 import { ImageUploader } from '../components/notesScreen/ImageUploader';
 import { IngredientItem } from '../components/notesScreen/IngredientItem';
 import { CookingStepItem } from '../components/notesScreen/CookingStepItem';
@@ -26,6 +24,8 @@ interface CookingStep {
   step: number;
   description: string;
 }
+
+const HEADER_HEIGHT = Platform.OS === 'ios' ? 150 : 150;
 
 const NotesScreen: React.FC = () => {
   const { user } = useAuth();
@@ -98,32 +98,32 @@ const NotesScreen: React.FC = () => {
   };
 
   const uploadImage = async (imageUri: string): Promise<string | null> => {
-  try {
-    // Create FormData for React Native
-    const formData = new FormData();
-    
-    // Get file extension
-    const fileExtension = imageUri.split('.').pop() || 'jpg';
-    const fileName = `recipe_${Date.now()}.${fileExtension}`;
-    
-    // Append file to FormData
-    formData.append('file', {
-      uri: imageUri,
-      type: `image/${fileExtension}`,
-      name: fileName,
-    } as any);
+    try {
+      // Create FormData for React Native
+      const formData = new FormData();
 
-    // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from('recipe-images')
-      .upload(fileName, formData, {
-        contentType: `image/${fileExtension}`,
-      });
+      // Get file extension
+      const fileExtension = imageUri.split('.').pop() || 'jpg';
+      const fileName = `recipe_${Date.now()}.${fileExtension}`;
 
-    if (error) {
-      console.error('Supabase storage error:', error);
-      return null;
-    }
+      // Append file to FormData
+      formData.append('file', {
+        uri: imageUri,
+        type: `image/${fileExtension}`,
+        name: fileName,
+      } as any);
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('recipe-images')
+        .upload(fileName, formData, {
+          contentType: `image/${fileExtension}`,
+        });
+
+      if (error) {
+        console.error('Supabase storage error:', error);
+        return null;
+      }
 
       const { data: publicUrlData } = supabase.storage
         .from('recipe-images')
@@ -143,10 +143,10 @@ const NotesScreen: React.FC = () => {
     }
 
     // Check if at least one ingredient has all fields filled
-    const validIngredients = ingredients.filter(ing => 
+    const validIngredients = ingredients.filter(ing =>
       ing.amount.trim() && ing.unit.trim() && ing.name.trim()
     );
-    
+
     if (validIngredients.length === 0) {
       Alert.alert('Error', 'Please add at least one complete ingredient');
       return false;
@@ -154,7 +154,7 @@ const NotesScreen: React.FC = () => {
 
     // Check if at least one cooking step is filled
     const validSteps = cookingSteps.filter(step => step.description.trim());
-    
+
     if (validSteps.length === 0) {
       Alert.alert('Error', 'Please add at least one cooking step');
       return false;
@@ -183,11 +183,11 @@ const NotesScreen: React.FC = () => {
       }
 
       // Filter out empty ingredients and steps
-      const validIngredients = ingredients.filter(ing => 
+      const validIngredients = ingredients.filter(ing =>
         ing.amount.trim() && ing.unit.trim() && ing.name.trim()
       );
-      
-      const validSteps = cookingSteps.filter(step => 
+
+      const validSteps = cookingSteps.filter(step =>
         step.description.trim()
       );
 
@@ -217,7 +217,7 @@ const NotesScreen: React.FC = () => {
       }
 
       Alert.alert(
-        'Success', 
+        'Success',
         'Recipe saved successfully!',
         [
           {
@@ -246,7 +246,7 @@ const NotesScreen: React.FC = () => {
         ]
       );
 
-      } catch (error: any) {
+    } catch (error: any) {
       console.error('Error saving recipe:', error);
       Alert.alert('Error', 'Failed to save recipe. Please try again.');
     } finally {
@@ -255,13 +255,15 @@ const NotesScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 px-4">
+    <View className="flex-1">
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
       {/* Header menggunakan komponen */}
-      <RecipeHeader
+      <Header
         title="Add Your Own Recipe"
       />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
+        showsVerticalScrollIndicator={false}>
         {/* Image Upload menggunakan komponen */}
         <ImageUploader
           imageUri={imageUri}
@@ -385,7 +387,7 @@ const NotesScreen: React.FC = () => {
 
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
