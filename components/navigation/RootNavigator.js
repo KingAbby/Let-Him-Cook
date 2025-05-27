@@ -2,10 +2,12 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { ROUTES } from "./routes";
 import BottomTabNavigator from "./BottomTabNavigator";
+import StackNavigator from "./StackNavigator"; // Import StackNavigator
 import { useAuth } from "../../context/AuthContext";
 import LoginScreen from "../../pages/LoginScreen";
 import RegisterScreen from "../../pages/RegisterScreen";
 import { ActivityIndicator, View } from "react-native";
+import ProfileScreen from "../../pages/ProfileScreen"; // Import ProfileScreen
 
 // Pastikan ini hanya diimpor jika file benar-benar ada
 // import TestSupabase from '../../pages/testSupabase';
@@ -31,12 +33,13 @@ const RootNavigator = () => {
         <ActivityIndicator size="large" color="#1482D1" />
       </View>
     );
-  }
-
-  return (
+  } return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       {user ? (
-        <RootStack.Screen name="MainApp" component={BottomTabNavigator} />
+        <>
+          <RootStack.Screen name="MainApp" component={BottomTabNavigator} />
+          <RootStack.Screen name={"Profile"} component={ProfileScreen} />
+        </>
       ) : (
         <RootStack.Screen name="Auth" component={AuthNavigator} />
       )}
