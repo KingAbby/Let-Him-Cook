@@ -9,6 +9,12 @@ export const ROUTES = {
   NOTES: "Notes",
   PROFILE: "Profile",
 
+  // Profile related screens
+  EDIT_PROFILE: "EditProfile",
+
+  // Recipe related screens
+  RECIPE_DETAIL: "RecipeDetail",
+
   // Other
   TEST_SUPABASE: "TestSupabase",
 };
