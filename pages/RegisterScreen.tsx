@@ -1,15 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { ROUTES } from "../components/navigation/routes";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 const RegisterScreen = ({ navigation }: any) => {
   const [name, setName] = useState("");
@@ -17,9 +23,14 @@ const RegisterScreen = ({ navigation }: any) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signUp } = useAuth();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleRegister = async () => {
+    Keyboard.dismiss();
+
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -31,16 +42,12 @@ const RegisterScreen = ({ navigation }: any) => {
     }
 
     setLoading(true);
-    console.log("Memulai proses registrasi...");
     const { data, error } = await signUp(email, password, name);
-    console.log("Hasil registrasi:", { data, error });
     setLoading(false);
 
     if (error) {
-      console.log("Error registrasi:", error);
       Alert.alert("Error", error.message);
     } else {
-      console.log("Registrasi berhasil, navigasi ke Login");
       Alert.alert(
         "Registration Successful",
         "Your account has been created successfully. Please login with your credentials.",
@@ -48,7 +55,6 @@ const RegisterScreen = ({ navigation }: any) => {
           {
             text: "Go to Login",
             onPress: () => {
-              console.log("Navigasi ke Login dengan email:", email);
               navigation.navigate(ROUTES.LOGIN, { email });
             },
           },
@@ -57,117 +63,197 @@ const RegisterScreen = ({ navigation }: any) => {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  // Handler untuk scroll otomatis saat input difokuskan
+  const handleFocus = (yOffset: number) => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: yOffset, animated: true });
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Let Him Cook</Text>
-      <Text style={styles.subtitle}>Create your account</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <LinearGradient colors={["#f8fafc", "#f1f5f9"]} className="flex-1">
+          <ScrollView
+            ref={scrollViewRef}
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 40 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="min-h-full justify-center px-6 py-12">
+              {/* Logo/App Name dengan Icon */}
+              <View className="items-center mb-8">
+                <View className="w-24 h-24 rounded-full overflow-hidden mb-4 shadow-lg">
+                  <LinearGradient
+                    colors={["#3B82F6", "#60A5FA"]}
+                    className="w-full h-full items-center justify-center"
+                  >
+                    <Ionicons name="restaurant" size={48} color="white" />
+                  </LinearGradient>
+                </View>
+                <Text className="text-3xl font-bold text-gray-800">
+                  Let Him Cook
+                </Text>
+                <Text className="text-base text-gray-600 mt-2">
+                  Create your account
+                </Text>
+              </View>
 
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
+              {/* Form dengan Card Effect */}
+              <View className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm mx-auto">
+                <View className="mb-5">
+                  <Text className="text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </Text>
+                  <View className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-3 overflow-hidden">
+                    <Ionicons name="person-outline" size={20} color="#6B7280" />
+                    <TextInput
+                      className="flex-1 px-2 py-3.5"
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChangeText={setName}
+                      autoCapitalize="words"
+                      onFocus={() => handleFocus(50)}
+                    />
+                  </View>
+                </View>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleRegister}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Register</Text>
-          )}
-        </TouchableOpacity>
+                <View className="mb-5">
+                  <Text className="text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </Text>
+                  <View className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-3 overflow-hidden">
+                    <Ionicons name="mail-outline" size={20} color="#6B7280" />
+                    <TextInput
+                      className="flex-1 px-2 py-3.5"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChangeText={setEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      onFocus={() => handleFocus(120)}
+                    />
+                  </View>
+                </View>
 
-        <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate(ROUTES.LOGIN)}>
-            <Text style={styles.loginLink}>Login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+                <View className="mb-5">
+                  <Text className="text-sm font-medium text-gray-700 mb-1">
+                    Password
+                  </Text>
+                  <View className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-3 overflow-hidden">
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color="#6B7280"
+                    />
+                    <TextInput
+                      className="flex-1 px-2 py-3.5"
+                      placeholder="Create a password"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!showPassword}
+                      onFocus={() => handleFocus(190)}
+                    />
+                    <TouchableOpacity
+                      onPress={togglePasswordVisibility}
+                      className="p-2"
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color="#6B7280"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View className="mb-6">
+                  <Text className="text-sm font-medium text-gray-700 mb-1">
+                    Confirm Password
+                  </Text>
+                  <View className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-3 overflow-hidden">
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color="#6B7280"
+                    />
+                    <TextInput
+                      className="flex-1 px-2 py-3.5"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      secureTextEntry={!showConfirmPassword}
+                      onFocus={() => handleFocus(260)}
+                    />
+                    <TouchableOpacity
+                      onPress={toggleConfirmPasswordVisibility}
+                      className="p-2"
+                    >
+                      <Ionicons
+                        name={
+                          showConfirmPassword
+                            ? "eye-off-outline"
+                            : "eye-outline"
+                        }
+                        size={20}
+                        color="#6B7280"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  className="w-full overflow-hidden rounded-xl shadow-md mb-4"
+                  onPress={handleRegister}
+                  disabled={loading}
+                >
+                  <LinearGradient
+                    colors={["#3B82F6", "#60A5FA"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    className="py-3.5"
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text className="text-center text-white font-bold text-base">
+                        Register
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <View className="flex-row justify-center items-center">
+                  <Text className="text-gray-600">
+                    Already have an account?{" "}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate(ROUTES.LOGIN)}
+                    className="py-2"
+                  >
+                    <Text className="text-blue-500 font-bold">Login</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </LinearGradient>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: "#666",
-    marginBottom: 30,
-  },
-  form: {
-    width: "100%",
-    maxWidth: 400,
-  },
-  input: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#ff6b6b",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  loginContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-  loginText: {
-    color: "#666",
-  },
-  loginLink: {
-    color: "#ff6b6b",
-    fontWeight: "bold",
-  },
-});
 
 export default RegisterScreen;

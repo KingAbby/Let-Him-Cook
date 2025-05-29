@@ -2,15 +2,13 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { ROUTES } from "./routes";
 import BottomTabNavigator from "./BottomTabNavigator";
-import StackNavigator from "./StackNavigator"; // Import StackNavigator
 import { useAuth } from "../../context/AuthContext";
 import LoginScreen from "../../pages/LoginScreen";
 import RegisterScreen from "../../pages/RegisterScreen";
 import { ActivityIndicator, View } from "react-native";
-import ProfileScreen from "../../pages/ProfileScreen"; // Import ProfileScreen
-
-// Pastikan ini hanya diimpor jika file benar-benar ada
-// import TestSupabase from '../../pages/testSupabase';
+import ProfileScreen from "../../pages/ProfileScreen";
+import EditProfileScreen from "../../pages/EditProfileScreen";
+import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 
 const RootStack = createStackNavigator();
 const AuthStack = createStackNavigator();
@@ -33,12 +31,27 @@ const RootNavigator = () => {
         <ActivityIndicator size="large" color="#1482D1" />
       </View>
     );
-  } return (
+  }
+
+  return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       {user ? (
         <>
+          {/* Main App Screen */}
           <RootStack.Screen name="MainApp" component={BottomTabNavigator} />
-          <RootStack.Screen name={"Profile"} component={ProfileScreen} />
+
+          {/* Profile Screen */}
+          <RootStack.Screen name={ROUTES.PROFILE} component={ProfileScreen} />
+
+          {/* Tambahkan screen lain yang perlu diakses dari stack utama */}
+          <RootStack.Screen
+            name={ROUTES.EDIT_PROFILE}
+            component={EditProfileScreen}
+          />
+          <RootStack.Screen
+            name={ROUTES.RECIPE_DETAIL}
+            component={RecipeDetailScreen}
+          />
         </>
       ) : (
         <RootStack.Screen name="Auth" component={AuthNavigator} />
