@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-  StatusBar,
-  Platform,
-} from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, StatusBar, Platform } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Header from "../components/Header";
 import { ImageUploader } from "../components/notesScreen/ImageUploader";
@@ -34,7 +25,7 @@ interface CookingStep {
   description: string;
 }
 
-const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 70;
+const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 120;
 
 const NotesScreen: React.FC = () => {
   const { user } = useAuth();
@@ -52,25 +43,11 @@ const NotesScreen: React.FC = () => {
     { id: "2", amount: "", unit: "", name: "" },
     { id: "3", amount: "", unit: "", name: "" },
   ]);
-
   const [cookingSteps, setCookingSteps] = useState<CookingStep[]>([
     { id: "1", step: 1, description: "" },
     { id: "2", step: 2, description: "" },
     { id: "3", step: 3, description: "" },
   ]);
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
 
   const addIngredient = () => {
     const newId = (ingredients.length + 1).toString();
@@ -386,9 +363,8 @@ const NotesScreen: React.FC = () => {
             <TouchableOpacity
               onPress={saveRecipe}
               disabled={saving}
-              className={`${
-                saving ? "bg-gray-400" : "bg-green-600"
-              } rounded-lg py-4 items-center`}
+              className={`${saving ? "bg-gray-400" : "bg-green-600"
+                } rounded-lg py-4 items-center`}
             >
               {saving ? (
                 <View className="flex-row items-center">
