@@ -1,16 +1,5 @@
 import React, { useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Image,
-  StatusBar,
-  Platform,
-} from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, RefreshControl, Image, StatusBar, Platform, ActionSheetIOS } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../utils/supabase";
@@ -19,12 +8,15 @@ import Header from "../components/Header";
 import { LinearGradient } from "expo-linear-gradient";
 import { ROUTES } from "../components/navigation/routes";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as ImagePicker from 'expo-image-picker';
+import { decode } from 'base64-arraybuffer';
 
 // Definisi tipe untuk parameter navigasi
 type RootStackParamList = {
   [ROUTES.EDIT_PROFILE]: undefined;
   [ROUTES.RECIPE_DETAIL]: { recipeId: string };
   [ROUTES.NOTES]: undefined;
+  MainApp: { screen: string };
 };
 
 // Tipe untuk navigasi
@@ -48,10 +40,11 @@ const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { user, signOut } = useAuth();
   const userName = user?.user_metadata?.name || "User";
-  const avatarUrl = user?.user_metadata?.avatar_url;
+  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const fetchUserRecipes = async () => {
     if (!user) return;
@@ -91,17 +84,175 @@ const ProfileScreen = () => {
       };
     }, [user])
   );
-
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchUserRecipes();
+  };  // Function to upload image to Supabase storage
+  const uploadAvatarToSupabase = async (base64Image: string) => {
+    if (!user) return null;
+
+    try {
+      setUploadingImage(true);
+
+      const fileName = `public/avatar_${user.id}_${Date.now()}.jpg`;
+
+      // Upload to Supabase storage using base64
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, decode(base64Image), {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+
+      // Get public URL
+      const { data: publicData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      return publicData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
-  const handleSignOut = async () => {
+  // Function to update user metadata with new avatar URL
+  const updateUserAvatar = async (avatarUrl: string) => {
     try {
-      await signOut();
-      // Tidak perlu navigasi, akan dihandle oleh AuthContext
+      const { error } = await supabase.auth.updateUser({
+        data: { avatar_url: avatarUrl }
+      });
+
+      if (error) throw error;
+
+      setAvatarUrl(avatarUrl);
+      Alert.alert('Success', 'Profile photo updated successfully!');
     } catch (error: any) {
+      console.error('Error updating user avatar:', error);
+      Alert.alert('Error', 'Failed to update profile photo');
+    }
+  };
+
+  // Function to handle image selection
+  const handleImagePicker = () => {
+    const options = [
+      'Take Photo',
+      'Choose from Gallery',
+      'Cancel'
+    ];
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: 2,
+        },
+        async (buttonIndex) => {
+          if (buttonIndex === 0) {
+            await openCamera();
+          } else if (buttonIndex === 1) {
+            await openGallery();
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        'Select Photo',
+        'Choose an option to update your profile photo',
+        [
+          { text: 'Take Photo', onPress: openCamera },
+          { text: 'Choose from Gallery', onPress: openGallery },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+    }
+  };
+  // Function to open camera
+  const openCamera = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Camera permission is required to take photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0] && result.assets[0].base64) {
+        const avatarUrl = await uploadAvatarToSupabase(result.assets[0].base64);
+        if (avatarUrl) {
+          await updateUserAvatar(avatarUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Error opening camera:', error);
+      Alert.alert('Error', 'Failed to open camera');
+    }
+  };
+
+  // Function to open gallery
+  const openGallery = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Gallery permission is required to select photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0] && result.assets[0].base64) {
+        const avatarUrl = await uploadAvatarToSupabase(result.assets[0].base64);
+        if (avatarUrl) {
+          await updateUserAvatar(avatarUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Error opening gallery:', error);
+      Alert.alert('Error', 'Failed to open gallery');
+    }
+  }; const handleSignOut = async () => {
+    try {
+      // Show loading indicator to give feedback to the user
+      setLoading(true);
+
+      // iOS-specific handling for better sign-out experience
+      if (Platform.OS === 'ios') {
+        // Immediately hide any content by setting recipes to empty
+        setRecipes([]);
+      }
+
+      // Call signOut function from AuthContext
+      await signOut();
+
+      // Navigation will be handled by AuthContext, but on iOS we'll add extra confirmation
+      if (Platform.OS === 'ios') {
+        console.log('Sign out completed on iOS');
+      }
+    } catch (error: any) {
+      // Make sure loading indicator is hidden if there's an error
+      setLoading(false);
       Alert.alert("Error", error.message || "Failed to sign out");
     }
   };
@@ -132,7 +283,9 @@ const ProfileScreen = () => {
         barStyle="dark-content"
       />
 
-      <Header title="Profile" />
+      <Header
+        title="Profile"
+        showBackButton={true} />
 
       <ScrollView
         className="flex-1"
@@ -148,24 +301,25 @@ const ProfileScreen = () => {
             colors={["#3B82F6", "#60A5FA"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            className="px-5 py-4"
-          >
+            className="px-5 py-4"          >
             <Text className="text-white text-lg font-semibold">My Profile</Text>
           </LinearGradient>
-
-          <View className="p-5 flex-row items-center">
-            {avatarUrl ? (
-              <Image
-                source={{ uri: avatarUrl }}
-                className="w-16 h-16 rounded-full"
-              />
-            ) : (
-              <View className="h-16 w-16 rounded-full bg-blue-500 items-center justify-center">
-                <Text className="text-white text-2xl font-bold">
-                  {userName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            )}
+          <TouchableOpacity className="p-5 flex-row items-center"
+            onPress={handleEditProfile}>
+            <View className="relative">
+              {avatarUrl ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  className="w-16 h-16 rounded-full"
+                />
+              ) : (
+                <View className="h-16 w-16 rounded-full bg-blue-500 items-center justify-center">
+                  <Text className="text-white text-2xl font-bold">
+                    {userName.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
 
             <View className="ml-4 flex-1">
               <Text className="text-xl font-semibold text-gray-800">
@@ -174,13 +328,12 @@ const ProfileScreen = () => {
               <Text className="text-gray-600">{user?.email}</Text>
             </View>
 
-            <TouchableOpacity
-              onPress={handleEditProfile}
+            <View
               className="bg-gray-100 p-2 rounded-full"
             >
               <Ionicons name="pencil-outline" size={20} color="#3B82F6" />
-            </TouchableOpacity>
-          </View>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* My Recipes Section */}
@@ -200,7 +353,12 @@ const ProfileScreen = () => {
                 You haven't created any recipes yet.
               </Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate(ROUTES.NOTES)}
+                onPress={() => {
+                  // Use navigate to Bottom Tab Navigator first
+                  navigation.navigate('MainApp', {
+                    screen: ROUTES.NOTES
+                  });
+                }}
                 className="mt-3 bg-blue-500 py-2 px-4 rounded-lg"
               >
                 <Text className="text-white font-medium">Create Recipe</Text>

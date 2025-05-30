@@ -17,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { ROUTES } from "../components/navigation/routes";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 70;
+const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 120;
 
 const HomeScreen = ({ navigation }) => {
   const { user, signOut } = useAuth();

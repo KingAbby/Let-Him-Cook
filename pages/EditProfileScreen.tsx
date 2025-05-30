@@ -12,6 +12,7 @@ import {
   StatusBar,
   Image,
   Modal,
+  ActionSheetIOS,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
@@ -20,34 +21,43 @@ import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header";
 import * as ImagePicker from "expo-image-picker";
 import { decode } from "base64-arraybuffer";
-import { LinearGradient } from "expo-linear-gradient";
 
-const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 70;
+const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 120;
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
   const { user, signOut } = useAuth();
+
+  // Profile data states
   const [name, setName] = useState(user?.user_metadata?.name || "");
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.user_metadata?.avatar_url || null
   );
+
+  // Loading states
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Modal visibility states
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showImageOptions, setShowImageOptions] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showImageActionSheet, setShowImageActionSheet] = useState(false);
 
+  // Request camera and photo library permissions on component mount
   useEffect(() => {
-    (async () => {
-      // Request camera and photo library permissions
+    const requestPermissions = async () => {
       if (Platform.OS !== "web") {
         const { status: cameraStatus } =
           await ImagePicker.requestCameraPermissionsAsync();
         const { status: libraryStatus } =
           await ImagePicker.requestMediaLibraryPermissionsAsync();
+
         if (cameraStatus !== "granted" || libraryStatus !== "granted") {
           Alert.alert(
             "Permission Required",
@@ -55,33 +65,37 @@ const EditProfileScreen = () => {
           );
         }
       }
-    })();
+    };
+
+    requestPermissions();
   }, []);
 
+  /**
+   * Handles picking an image from camera or gallery, uploading to Supabase,
+   * and updating the user's profile
+   */
   const pickImage = async (useCamera = false) => {
     try {
-      setShowImageOptions(false);
-      setLoading(true);
+      setUploadingImage(true);
 
+      // Configure image picker options
+      const imageOptions = {
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1] as [number, number],
+        quality: 0.7,
+        base64: true,
+      };
+
+      // Launch camera or gallery based on user selection
       let result;
       if (useCamera) {
-        result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.7,
-          base64: true,
-        });
+        result = await ImagePicker.launchCameraAsync(imageOptions);
       } else {
-        result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.7,
-          base64: true,
-        });
+        result = await ImagePicker.launchImageLibraryAsync(imageOptions);
       }
 
+      // Process result if image was selected
       if (!result.canceled && result.assets && result.assets[0].base64) {
         const base64Image = result.assets[0].base64;
         const filePath = `public/avatar_${user?.id}_${Date.now()}.jpg`;
@@ -98,7 +112,7 @@ const EditProfileScreen = () => {
           throw error;
         }
 
-        // Get public URL
+        // Get public URL for the uploaded image
         const { data: publicUrlData } = supabase.storage
           .from("avatars")
           .getPublicUrl(filePath);
@@ -108,17 +122,51 @@ const EditProfileScreen = () => {
         // Update user metadata with avatar URL
         await updateUserWithAvatar(avatarUrl);
 
-        // Set local state
+        // Set local state to display the new image
         setProfileImage(avatarUrl);
       }
     } catch (error) {
       console.error("Error uploading image:", error);
       Alert.alert("Error", "Failed to upload image. Please try again.");
     } finally {
-      setLoading(false);
+      setUploadingImage(false);
     }
   };
 
+  /**
+   * Shows appropriate UI for picking profile image based on platform
+   */
+  const handleImagePicker = async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        // Use iOS native ActionSheet
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: ['Cancel', 'Take Photo', 'Choose from Gallery'],
+            cancelButtonIndex: 0,
+            title: 'Select Profile Picture',
+            message: 'Choose an option to update your profile picture',
+          },
+          (buttonIndex) => {
+            if (buttonIndex === 1) {
+              pickImage(true); // Camera
+            } else if (buttonIndex === 2) {
+              pickImage(false); // Gallery
+            }
+          }
+        );
+      } else {
+        // For Android, show custom bottom sheet
+        setShowImageActionSheet(true);
+      }
+    } catch (error) {
+      console.error("Error opening image picker:", error);
+    }
+  };
+
+  /**
+   * Updates user metadata with the new avatar URL
+   */
   const updateUserWithAvatar = async (avatarUrl: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
@@ -136,7 +184,11 @@ const EditProfileScreen = () => {
     }
   };
 
+  /**
+   * Handles saving profile changes
+   */
   const handleSave = async () => {
+    // Validate input
     if (!name.trim()) {
       Alert.alert("Error", "Name cannot be empty");
       return;
@@ -145,6 +197,7 @@ const EditProfileScreen = () => {
     setLoading(true);
 
     try {
+      // Update user profile in Supabase
       const { error } = await supabase.auth.updateUser({
         data: { name: name.trim() },
       });
@@ -153,6 +206,7 @@ const EditProfileScreen = () => {
         throw error;
       }
 
+      // Show success message and navigate back
       Alert.alert("Success", "Profile updated successfully", [
         {
           text: "OK",
@@ -167,7 +221,11 @@ const EditProfileScreen = () => {
     }
   };
 
+  /**
+   * Handles password change
+   */
   const handleChangePassword = async () => {
+    // Validate password inputs
     if (!currentPassword) {
       Alert.alert("Error", "Please enter your current password");
       return;
@@ -212,6 +270,7 @@ const EditProfileScreen = () => {
         throw error;
       }
 
+      // Reset fields and close modal on success
       Alert.alert("Success", "Password updated successfully");
       setShowPasswordModal(false);
       setCurrentPassword("");
@@ -255,8 +314,9 @@ const EditProfileScreen = () => {
           {/* Profile Picture Section */}
           <View className="items-center mt-4 mb-6">
             <TouchableOpacity
-              onPress={() => setShowImageOptions(true)}
+              onPress={handleImagePicker}
               className="relative"
+              disabled={uploadingImage}
             >
               {profileImage ? (
                 <Image
@@ -271,7 +331,11 @@ const EditProfileScreen = () => {
                 </View>
               )}
               <View className="absolute bottom-0 right-0 bg-gray-100 p-2 rounded-full border-2 border-white">
-                <Ionicons name="camera" size={16} color="#3B82F6" />
+                {uploadingImage ? (
+                  <ActivityIndicator size="small" color="#3B82F6" />
+                ) : (
+                  <Ionicons name="camera" size={16} color="#3B82F6" />
+                )}
               </View>
             </TouchableOpacity>
             <Text className="text-gray-500 text-sm mt-2">
@@ -279,11 +343,13 @@ const EditProfileScreen = () => {
             </Text>
           </View>
 
+          {/* Profile Form Section */}
           <View className="mx-4 bg-white rounded-2xl shadow-sm p-5">
             <Text className="text-lg font-semibold text-gray-800 mb-6">
               Update Your Profile
             </Text>
 
+            {/* Name Field */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-1">
                 Full Name
@@ -300,6 +366,7 @@ const EditProfileScreen = () => {
               </View>
             </View>
 
+            {/* Email Field (Non-editable) */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -333,6 +400,7 @@ const EditProfileScreen = () => {
               <Ionicons name="chevron-forward" size={20} color="#6B7280" />
             </TouchableOpacity>
 
+            {/* Save Button */}
             <TouchableOpacity
               className="w-full py-3 bg-blue-500 rounded-lg mt-6"
               onPress={handleSave}
@@ -350,69 +418,82 @@ const EditProfileScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Image Options Modal */}
-      <Modal
-        visible={showImageOptions}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowImageOptions(false)}
-      >
-        <TouchableOpacity
-          style={{ flex: 1, justifyContent: "flex-end" }}
-          activeOpacity={1}
-          onPress={() => setShowImageOptions(false)}
+      {/* Image Action Sheet for Android */}
+      {Platform.OS === 'android' && (
+        <Modal
+          visible={showImageActionSheet}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowImageActionSheet(false)}
         >
-          <View className="bg-white rounded-t-3xl p-5">
-            <View className="w-16 h-1 bg-gray-300 rounded-full self-center mb-6" />
-            <Text className="text-xl font-bold text-gray-800 mb-4">
-              Choose Profile Picture
-            </Text>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              justifyContent: "flex-end",
+              backgroundColor: 'rgba(0,0,0,0.5)'
+            }}
+            activeOpacity={1}
+            onPress={() => setShowImageActionSheet(false)}
+          >
+            <View className="bg-white rounded-t-3xl">
+              {/* Header */}
+              <View className="p-5 border-b border-gray-100">
+                <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-4" />
+                <Text className="text-lg font-semibold text-gray-800 text-center">
+                  Select Profile Picture
+                </Text>
+                <Text className="text-sm text-gray-500 text-center mt-1">
+                  Choose an option to update your profile picture
+                </Text>
+              </View>
 
-            <TouchableOpacity
-              className="flex-row items-center py-3 px-4 mb-3 bg-gray-50 rounded-xl"
-              onPress={() => pickImage(true)}
-            >
-              <Ionicons name="camera-outline" size={24} color="#3B82F6" />
-              <Text className="ml-3 text-gray-700 font-medium">
-                Take a Photo
-              </Text>
-            </TouchableOpacity>
+              {/* Options */}
+              <View className="px-5 pb-5">
+                <TouchableOpacity
+                  className="flex-row items-center py-4 px-4 mb-3 bg-blue-50 rounded-xl border border-blue-100"
+                  onPress={() => {
+                    setShowImageActionSheet(false);
+                    pickImage(true);
+                  }}
+                  disabled={uploadingImage}
+                >
+                  <View className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-4">
+                    <Ionicons name="camera" size={20} color="white" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-gray-800 font-semibold text-base">Take Photo</Text>
+                    <Text className="text-gray-500 text-sm">Use camera to take a new photo</Text>
+                  </View>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              className="flex-row items-center py-3 px-4 mb-3 bg-gray-50 rounded-xl"
-              onPress={() => pickImage(false)}
-            >
-              <Ionicons name="image-outline" size={24} color="#3B82F6" />
-              <Text className="ml-3 text-gray-700 font-medium">
-                Choose from Gallery
-              </Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-row items-center py-4 px-4 mb-3 bg-green-50 rounded-xl border border-green-100"
+                  onPress={() => {
+                    setShowImageActionSheet(false);
+                    pickImage(false);
+                  }}
+                  disabled={uploadingImage}
+                >
+                  <View className="w-10 h-10 bg-green-500 rounded-full items-center justify-center mr-4">
+                    <Ionicons name="images" size={20} color="white" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-gray-800 font-semibold text-base">Choose from Gallery</Text>
+                    <Text className="text-gray-500 text-sm">Select from your photo library</Text>
+                  </View>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              className="flex-row items-center py-3 px-4 mb-3 bg-gray-50 rounded-xl"
-              onPress={() => {
-                setProfileImage(null);
-                setShowImageOptions(false);
-                updateUserWithAvatar("");
-              }}
-            >
-              <Ionicons name="trash-outline" size={24} color="#EF4444" />
-              <Text className="ml-3 text-gray-700 font-medium">
-                Remove Photo
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="mt-4 bg-gray-200 rounded-xl py-3"
-              onPress={() => setShowImageOptions(false)}
-            >
-              <Text className="text-gray-700 font-medium text-center">
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+                <TouchableOpacity
+                  className="py-4 px-4 bg-gray-100 rounded-xl mt-2"
+                  onPress={() => setShowImageActionSheet(false)}
+                >
+                  <Text className="text-gray-700 font-semibold text-center text-base">Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
 
       {/* Password Change Modal */}
       <Modal
@@ -422,7 +503,7 @@ const EditProfileScreen = () => {
         onRequestClose={() => setShowPasswordModal(false)}
       >
         <TouchableOpacity
-          style={{ flex: 1, justifyContent: "flex-end" }}
+          style={{ flex: 1, justifyContent: "flex-end", backgroundColor: 'rgba(0,0,0,0.5)' }}
           activeOpacity={1}
           onPress={() => setShowPasswordModal(false)}
         >
@@ -432,6 +513,7 @@ const EditProfileScreen = () => {
               Change Password
             </Text>
 
+            {/* Current Password Field */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-1">
                 Current Password
@@ -452,6 +534,7 @@ const EditProfileScreen = () => {
               </View>
             </View>
 
+            {/* New Password Field */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-1">
                 New Password
@@ -472,6 +555,7 @@ const EditProfileScreen = () => {
               </View>
             </View>
 
+            {/* Confirm New Password Field */}
             <View className="mb-6">
               <Text className="text-sm font-medium text-gray-700 mb-1">
                 Confirm New Password
@@ -492,6 +576,7 @@ const EditProfileScreen = () => {
               </View>
             </View>
 
+            {/* Update Password Button */}
             <TouchableOpacity
               className="w-full py-3 bg-blue-500 rounded-lg mb-3"
               onPress={handleChangePassword}
@@ -506,6 +591,7 @@ const EditProfileScreen = () => {
               )}
             </TouchableOpacity>
 
+            {/* Cancel Button */}
             <TouchableOpacity
               className="mt-2 bg-gray-200 rounded-xl py-3"
               onPress={() => setShowPasswordModal(false)}

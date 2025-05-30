@@ -1,8 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 import { FontAwesome, Ionicons, MaterialCommunityIcons, Octicons, Foundation } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { ROUTES } from './routes';
 
 import HomeScreen from '../../pages/HomeScreen';
@@ -13,10 +12,11 @@ import NotesScreen from '../../pages/NotesScreen';
 const Tab = createBottomTabNavigator();
 
 export const tabBarStyle = {
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
-    position: 'absolute',
-    zIndex: 1000
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(229, 231, 235, 0.7)',
+    zIndex: 1000,
+    marginBottom: 0
 };
 
 const BottomTabNavigator = () => {
@@ -24,15 +24,18 @@ const BottomTabNavigator = () => {
         <View style={{ flex: 1 }}>
             <Tab.Navigator
                 screenOptions={{
-                    headerShown: false,
-                    tabBarBackground: () => (
-                        <BlurView intensity={50} tint="light" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-                    ), tabBarStyle: {
-                        ...tabBarStyle,
+                    headerShown: false, tabBarStyle: {
+                        backgroundColor: '#FFFFFF',
+                        borderTopWidth: 1,
+                        borderTopColor: 'rgba(229, 231, 235, 0.7)',
                         elevation: 8,
                         shadowOpacity: 0.3,
                         shadowRadius: 2,
-                        shadowOffset: { height: -1, width: 0 }
+                        shadowOffset: { height: -1, width: 0 },
+                        height: 80,
+                        marginBottom: 0,
+                        paddingBottom: 6,
+                        paddingTop: 6
                     },
                     tabBarActiveTintColor: '#3B82F6',
                     tabBarInactiveTintColor: '#64748B',
@@ -46,10 +49,18 @@ const BottomTabNavigator = () => {
                     component={HomeScreen}
                     options={{
                         tabBarIcon: ({ color, size, focused }) => (
-                            focused ?
-                                <Octicons name="home" size={size} color={color} /> :
-                                <Octicons name="home" size={size} color={color} />
+                            <Octicons name="home" size={focused ? 24 : 22} color={color} />
                         ),
+                        tabBarLabel: ({ color, focused }) => (
+                            <Text style={{
+                                color,
+                                fontSize: 12,
+                                fontWeight: focused ? 'bold' : 'normal',
+                                marginTop: -5
+                            }}>
+                                Home
+                            </Text>
+                        )
                     }}
                 />
                 <Tab.Screen
@@ -57,10 +68,18 @@ const BottomTabNavigator = () => {
                     component={RecipeScreen}
                     options={{
                         tabBarIcon: ({ color, size, focused }) => (
-                            focused ?
-                                <MaterialCommunityIcons name="silverware-clean" size={size} color={color} /> :
-                                <MaterialCommunityIcons name="silverware-clean" size={size - 2} color={color} />
+                            <MaterialCommunityIcons name="silverware-clean" size={focused ? 24 : 22} color={color} />
                         ),
+                        tabBarLabel: ({ color, focused }) => (
+                            <Text style={{
+                                color,
+                                fontSize: 12,
+                                fontWeight: focused ? 'bold' : 'normal',
+                                marginTop: -5
+                            }}>
+                                Recipe
+                            </Text>
+                        )
                     }}
                 />
                 <Tab.Screen
@@ -68,24 +87,20 @@ const BottomTabNavigator = () => {
                     component={NotesScreen}
                     options={{
                         tabBarIcon: ({ color, size, focused }) => (
-                            focused ?
-                                <FontAwesome name="book" size={size} color={color} /> :
-                                <FontAwesome name="book" size={size - 2} color={color} />
+                            <FontAwesome name="book" size={focused ? 24 : 22} color={color} />
                         ),
-                    }}
-                />
-                {/* < Tab.Screen
-                    name={ROUTES.PROFILE}
-                    component={ProfileScreen}
-                    options={{
-                        tabBarIcon: ({ color, size, focused }) => (
-                            focused ?
-                                <Ionicons name="person" size={size} color={color} /> :
-                                <Ionicons name="person-outline" size={size} color={color} />
-                        ),
-                    }}
-                /> */}
-            </Tab.Navigator >
+                        tabBarLabel: ({ color, focused }) => (
+                            <Text style={{
+                                color,
+                                fontSize: 12,
+                                fontWeight: focused ? 'bold' : 'normal',
+                                marginTop: -5
+                            }}>
+                                Notes
+                            </Text>
+                        )
+                    }} />
+            </Tab.Navigator>
         </View>
     );
 };

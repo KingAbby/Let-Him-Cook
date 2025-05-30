@@ -80,13 +80,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setSession(session);
           setUser(session?.user || null);
           setLoading(false);
-        }
-
-        // Handle specific auth events
+        }        // Handle specific auth events
         if (event === "SIGNED_OUT") {
           if (mounted) {
+            // On sign out, immediately clean up the session and user state
+            // This helps prevent the white screen issue on iOS
             setSession(null);
             setUser(null);
+            setLoading(false);
+            console.log("User signed out successfully");
           }
         }
 
@@ -152,14 +154,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const signOut = async () => {
+  }; const signOut = async () => {
     try {
       setLoading(true);
-      await supabase.auth.signOut();
+
+      // First manually update the state to ensure UI updates properly
+      // This helps prevent the white screen on iOS
+      setUser(null);
+      setSession(null);
+
+      // Add a small delay to ensure state updates are processed
+      // This helps especially on iOS where state updates sometimes need more time
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Then actually sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Supabase signOut error:", error);
+        // Manual session cleanup since there's no clearSession method
+        setUser(null);
+        setSession(null);
+      }
+
+      console.log("Signed out successfully");
     } catch (error) {
       console.error("Sign out error:", error);
+      // Force manual cleanup in case of any error
+      setUser(null);
+      setSession(null);
     } finally {
       setLoading(false);
     }
