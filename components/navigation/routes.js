@@ -1,20 +1,17 @@
 export const ROUTES = {
-  // Auth
-  LOGIN: "Login",
-  REGISTER: "Register",
+	// Auth
+	LOGIN: "Login",
+	REGISTER: "Register",
 
-  // Main Screens
-  HOME: "Home",
-  RECIPE: "Recipe",
-  NOTES: "Notes",
-  PROFILE: "Profile",
+	// Main Screens
+	HOME: "Home",
+	RECIPE: "Recipe",
+	NOTES: "Notes",
+	PROFILE: "Profile",
 
-  // Profile related screens
-  EDIT_PROFILE: "EditProfile",
+	// Profile related screens
+	EDIT_PROFILE: "EditProfile",
 
-  // Recipe related screens
-  RECIPE_DETAIL: "RecipeDetail",
-
-  // Other
-  TEST_SUPABASE: "TestSupabase",
+	// Recipe related screens
+	RECIPE_DETAIL: "RecipeDetail",
 };
