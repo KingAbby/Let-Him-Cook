@@ -16,8 +16,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { ROUTES } from "../components/navigation/routes";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HEADER_HEIGHTS } from '../components/Header';
 
-const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 120;
+const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const HomeScreen = ({ navigation }) => {
   const { user, signOut } = useAuth();
@@ -66,10 +67,7 @@ const HomeScreen = ({ navigation }) => {
       {/* Header positioned absolutely so it stays fixed at the top */}
       <Header
         title="Let's Cook"
-        rightIcon={
-          <Ionicons name="notifications-outline" size={24} color="black" />
-        }
-        onRightIconPress={() => console.log("Notification pressed")}
+        
       />
 
       {/* Main Content with padding top to accommodate the fixed header */}

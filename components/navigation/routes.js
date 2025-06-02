@@ -14,4 +14,7 @@ export const ROUTES = {
 
 	// Recipe related screens
 	RECIPE_DETAIL: "RecipeDetail",
+
+	// Header related screens
+	BOOKMARKS: "Bookmarks",
 };

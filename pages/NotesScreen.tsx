@@ -25,6 +25,18 @@ interface CookingStep {
   description: string;
 }
 
+interface ValidationErrors {
+  recipeName: boolean;
+  description: boolean;
+  prepTime: boolean;
+  cookTime: boolean;
+  servings: boolean;
+  category: boolean;
+  image: boolean;
+  ingredients: boolean;
+  cookingSteps: boolean;
+}
+
 const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 120;
 
 const NotesScreen: React.FC = () => {
@@ -37,6 +49,19 @@ const NotesScreen: React.FC = () => {
   const [category, setCategory] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // State untuk error validation
+  const [errors, setErrors] = useState<ValidationErrors>({
+    recipeName: false,
+    description: false,
+    prepTime: false,
+    cookTime: false,
+    servings: false,
+    category: false,
+    image: false,
+    ingredients: false,
+    cookingSteps: false,
+  });
 
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { id: "1", amount: "", unit: "", name: "" },
@@ -81,6 +106,18 @@ const NotesScreen: React.FC = () => {
       ...cookingSteps,
       { id: newId, step: cookingSteps.length + 1, description: "" },
     ]);
+  };
+
+  const removeCookingStep = (id: string) => {
+    if (cookingSteps.length > 1) {
+      const filteredSteps = cookingSteps.filter((step) => step.id !== id);
+      // Reorder step numbers
+      const reorderedSteps = filteredSteps.map((step, index) => ({
+        ...step,
+        step: index + 1,
+      }));
+      setCookingSteps(reorderedSteps);
+    }
   };
 
   const updateCookingStep = (id: string, description: string) => {
@@ -131,30 +168,46 @@ const NotesScreen: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    if (!recipeName.trim()) {
-      Alert.alert("Error", "Recipe name is required");
-      return false;
-    }
+    const newErrors: ValidationErrors = {
+      recipeName: !recipeName.trim(),
+      description: !description.trim(),
+      prepTime: !prepTime.trim(),
+      cookTime: !cookTime.trim(),
+      servings: !servings.trim(),
+      category: !category.trim(),
+      image: !imageUri,
+      ingredients: false,
+      cookingSteps: false,
+    };
 
     // Check if at least one ingredient has all fields filled
     const validIngredients = ingredients.filter(
       (ing) => ing.amount.trim() && ing.unit.trim() && ing.name.trim()
     );
-
-    if (validIngredients.length === 0) {
-      Alert.alert("Error", "Please add at least one complete ingredient");
-      return false;
-    }
+    newErrors.ingredients = validIngredients.length === 0;
 
     // Check if at least one cooking step is filled
     const validSteps = cookingSteps.filter((step) => step.description.trim());
+    newErrors.cookingSteps = validSteps.length === 0;
 
-    if (validSteps.length === 0) {
-      Alert.alert("Error", "Please add at least one cooking step");
+    setErrors(newErrors);
+
+    // Check if any error exists
+    const hasErrors = Object.values(newErrors).some(error => error);
+    
+    if (hasErrors) {
+      Alert.alert("Error", "Please fill in all required fields");
       return false;
     }
 
     return true;
+  };
+
+  // Helper function untuk clear error saat user mulai mengetik
+  const clearError = (field: keyof ValidationErrors) => {
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: false }));
+    }
   };
 
   const saveRecipe = async () => {
@@ -257,41 +310,85 @@ const NotesScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Image Upload menggunakan komponen */}
-        <ImageUploader imageUri={imageUri} onImageSelected={setImageUri} />
+        <ImageUploader imageUri={imageUri} onImageSelected={(uri) => {
+            setImageUri(uri);
+            if (uri) clearError('image');
+          }} />
+          {errors.image && (
+          <Text className="text-red-500 text-sm mx-4 mt-1">
+            Please select an image for your recipe
+          </Text>
+        )}
 
         {/* Form Fields menggunakan komponen */}
         <FormField
           label="Recipe Name"
           value={recipeName}
-          onChangeText={setRecipeName}
+          onChangeText={(text) => {
+            setRecipeName(text);
+            if (text.trim()) clearError('recipeName');
+          }}
           placeholder="Example: Fried Rice"
         />
+        {errors.recipeName && (
+          <Text className="text-red-500 text-sm mx-4 mt-1">
+            Recipe name is required
+          </Text>
+        )}
 
         <FormField
           label="Description"
           value={description}
-          onChangeText={setDescription}
+          onChangeText={(text) => {
+            setDescription(text);
+            if (text.trim()) clearError('description');
+          }}
           placeholder="Tell us about your recipes"
           multiline
           numberOfLines={3}
           textAlignVertical="top"
         />
+        {errors.description && (
+          <Text className="text-red-500 text-sm mx-4 mt-1">
+            Description is required
+          </Text>
+        )}
 
         {/* Time Inputs menggunakan komponen */}
         <View className="mx-4 mt-4 flex-row">
-          <TimeInput
-            label="Preparation Time"
-            value={prepTime}
-            onChangeText={setPrepTime}
-            placeholder="15"
-          />
+          <View className="flex-1">
+            <TimeInput
+              label="Preparation Time"
+              value={prepTime}
+              onChangeText={(text) => {
+                setPrepTime(text);
+                if (text.trim()) clearError('prepTime');
+              }}
+              placeholder="15"
+            />
+            {errors.prepTime && (
+              <Text className="text-red-500 text-sm mt-1">
+                Preparation time is required
+              </Text>
+            )}
+          </View>
           <View className="w-4" />
-          <TimeInput
-            label="Cooking Time"
-            value={cookTime}
-            onChangeText={setCookTime}
-            placeholder="30"
-          />
+          <View className="flex-1">
+            <TimeInput
+              label="Cooking Time"
+              value={cookTime}
+              onChangeText={(text) => {
+                setCookTime(text);
+                if (text.trim()) clearError('cookTime');
+              }}
+              placeholder="30"
+            />
+            {errors.cookTime && (
+              <Text className="text-red-500 text-sm mt-1">
+                Cooking time is required
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* Servings */}
@@ -300,10 +397,18 @@ const NotesScreen: React.FC = () => {
           <FormField
             label=""
             value={servings}
-            onChangeText={setServings}
+            onChangeText={(text) => {
+              setServings(text);
+              if (text.trim()) clearError('servings');
+            }}
             placeholder="2-4 portion"
             containerStyle="mt-0"
           />
+          {errors.servings && (
+            <Text className="text-red-500 text-sm mt-1">
+              Portion is required
+            </Text>
+          )}
         </View>
 
         {/* Ingredients menggunakan komponen */}
@@ -318,11 +423,26 @@ const NotesScreen: React.FC = () => {
             <IngredientItem
               key={ingredient.id}
               ingredient={ingredient}
-              onUpdate={updateIngredient}
+              onUpdate={(id, field, value) => {
+                updateIngredient(id, field, value);
+                // Clear ingredient error if at least one complete ingredient exists
+                const updatedIngredients = ingredients.map(ing => 
+                  ing.id === id ? { ...ing, [field]: value } : ing
+                );
+                const hasValidIngredient = updatedIngredients.some(
+                  ing => ing.amount.trim() && ing.unit.trim() && ing.name.trim()
+                );
+                if (hasValidIngredient) clearError('ingredients');
+              }}
               onRemove={removeIngredient}
               showRemoveButton={ingredients.length > 1}
             />
           ))}
+          {errors.ingredients && (
+            <Text className="text-red-500 text-sm mt-2">
+              Please add at least one complete ingredient (amount, unit, and name)
+            </Text>
+          )}
         </View>
 
         {/* Cooking Steps menggunakan komponen */}
@@ -337,9 +457,24 @@ const NotesScreen: React.FC = () => {
             <CookingStepItem
               key={step.id}
               step={step}
-              onUpdate={updateCookingStep}
+              onUpdate={(id, description) => {
+                updateCookingStep(id, description);
+                // Clear cooking steps error if at least one step has description
+                const updatedSteps = cookingSteps.map(s => 
+                  s.id === id ? { ...s, description } : s
+                );
+                const hasValidStep = updatedSteps.some(s => s.description.trim());
+                if (hasValidStep) clearError('cookingSteps');
+              }}
+              onRemove={removeCookingStep}
+              showRemoveButton={cookingSteps.length > 1}
             />
           ))}
+          {errors.cookingSteps && (
+            <Text className="text-red-500 text-sm mt-2">
+              Please add at least one cooking step
+            </Text>
+          )}
         </View>
 
         {/* Additional Information */}
@@ -353,9 +488,17 @@ const NotesScreen: React.FC = () => {
             <CategoryInput
               label="Category"
               value={category}
-              onChangeText={setCategory}
-              placeholder="Example: Main Course"
+              onChangeText={(text) => {
+                setCategory(text);
+                if (text.trim()) clearError('category');
+              }}
+              
             />
+            {errors.category && (
+              <Text className="text-red-500 text-sm mt-1">
+                Category is required
+              </Text>
+            )}
           </View>
 
           {/* Save button moved to bottom */}
