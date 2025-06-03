@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Alert, StyleSheet, Platform, Modal, ActionSheetIOS } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -14,6 +14,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImageSelected,
   placeholder = "Tap to select an image"
 }) => {
+  const [showImageActionSheet, setShowImageActionSheet] = useState(false);
+
   const removeImage = () => {
     onImageSelected('');
   };
@@ -72,32 +74,40 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   };
 
-  // Tampilan opsi saat tombol ditekan
-  const showImageOptions = () => {
-    Alert.alert(
-      'Pilih Foto',
-      'Pilih sumber gambar',
-      [
-        {
-          text: 'Kamera',
-          onPress: pickFromCamera
-        },
-        {
-          text: 'Galeri',
-          onPress: pickFromGallery
-        },
-        {
-          text: 'Batal',
-          style: 'cancel'
-        },
-      ]
-    );
+  // Handle image picker with platform-specific UI
+  const handleImagePicker = async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        // Use iOS native ActionSheet
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: ['Cancel', 'Take Photo', 'Choose from Gallery'],
+            cancelButtonIndex: 0,
+            title: 'Select Recipe Image',
+            message: 'Choose an option to add your recipe image',
+          },
+          (buttonIndex) => {
+            if (buttonIndex === 1) {
+              pickFromCamera(); // Camera
+            } else if (buttonIndex === 2) {
+              pickFromGallery(); // Gallery
+            }
+          }
+        );
+      } else {
+        // For Android, show custom bottom sheet
+        setShowImageActionSheet(true);
+      }
+    } catch (error) {
+      console.error("Error opening image picker:", error);
+    }
   };
 
   return (
+    <>
     <View style={styles.container}>
       <TouchableOpacity
-        onPress={showImageOptions}
+        onPress={handleImagePicker}
         style={styles.uploadContainer}
       >
         {imageUri ? (
@@ -119,6 +129,78 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         )}
       </TouchableOpacity>
     </View>
+
+    {/* Image Action Sheet for Android */}
+      {Platform.OS === 'android' && (
+        <Modal
+          visible={showImageActionSheet}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowImageActionSheet(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowImageActionSheet(false)}
+          >
+            <View style={styles.modalContent}>
+              {/* Header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHandle} />
+                <Text style={styles.modalTitle}>
+                  Select Recipe Image
+                </Text>
+                <Text style={styles.modalSubtitle}>
+                  Choose an option to add your recipe image
+                </Text>
+              </View>
+
+              {/* Options */}
+              <View style={styles.modalOptions}>
+                <TouchableOpacity
+                  style={[styles.optionButton, styles.cameraOption]}
+                  onPress={() => {
+                    setShowImageActionSheet(false);
+                    pickFromCamera();
+                  }}
+                >
+                  <View style={[styles.optionIcon, styles.cameraIcon]}>
+                    <Ionicons name="camera" size={20} color="white" />
+                  </View>
+                  <View style={styles.optionText}>
+                    <Text style={styles.optionTitle}>Take Photo</Text>
+                    <Text style={styles.optionDescription}>Use camera to take a new photo</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.optionButton, styles.galleryOption]}
+                  onPress={() => {
+                    setShowImageActionSheet(false);
+                    pickFromGallery();
+                  }}
+                >
+                <View style={[styles.optionIcon, styles.galleryIcon]}>
+                    <Ionicons name="images" size={20} color="white" />
+                  </View>
+                  <View style={styles.optionText}>
+                    <Text style={styles.optionTitle}>Choose from Gallery</Text>
+                    <Text style={styles.optionDescription}>Select from your photo library</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setShowImageActionSheet(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
+      </>
   );
 };
 
@@ -162,5 +244,101 @@ const styles = StyleSheet.create({
   placeholderText: {
     marginTop: 8,
     color: '#6b7280',
+  },
+  // Modal styles for Android
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  modalHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  modalHandle: {
+    width: 48,
+    height: 4,
+    backgroundColor: '#d1d5db',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  modalOptions: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  cameraOption: {
+    backgroundColor: '#dbeafe',
+    borderColor: '#bfdbfe',
+  },
+  galleryOption: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#bbf7d0',
+  },
+  optionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  cameraIcon: {
+    backgroundColor: '#3b82f6',
+  },
+  galleryIcon: {
+    backgroundColor: '#22c55e',
+  },
+  optionText: {
+    flex: 1,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  optionDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  cancelButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
   },
 });

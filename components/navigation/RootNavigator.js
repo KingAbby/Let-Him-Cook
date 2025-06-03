@@ -9,6 +9,7 @@ import { ActivityIndicator, View } from "react-native";
 import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
+import BookmarksScreen from "../../pages/BookMarksScreen";
 
 const RootStack = createStackNavigator();
 const AuthStack = createStackNavigator();
@@ -51,6 +52,10 @@ const RootNavigator = () => {
           <RootStack.Screen
             name={ROUTES.RECIPE_DETAIL}
             component={RecipeDetailScreen}
+          />
+          <RootStack.Screen
+            name={ROUTES.BOOKMARKS}
+            component={BookmarksScreen} // Placeholder for Bookmarks screen
           />
         </>
       ) : (

@@ -10,6 +10,7 @@ import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 import TestSupabase from "../../pages/testSupabase";
+import BookmarksScreen from "../../pages/BookMarksScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -44,6 +45,9 @@ const StackNavigator = () => {
         name={ROUTES.RECIPE_DETAIL}
         component={RecipeDetailScreen}
       />
+
+      {/* Bookmarks */}
+      <Stack.Screen name={ROUTES.BOOKMARKS} component={BookmarksScreen} />
 
       {/* Test */}
       <Stack.Screen name={ROUTES.TEST_SUPABASE} component={TestSupabase} />
