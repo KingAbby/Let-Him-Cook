@@ -10,6 +10,7 @@ import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 import BookmarksScreen from "../../pages/BookMarksScreen";
+import MyRecipesScreen from "../../pages/MyRecipesScreen";
 
 const RootStack = createStackNavigator();
 const AuthStack = createStackNavigator();
@@ -54,8 +55,12 @@ const RootNavigator = () => {
             component={RecipeDetailScreen}
           />
           <RootStack.Screen
+            name={ROUTES.MY_RECIPES}
+            component={MyRecipesScreen}
+          />
+          <RootStack.Screen
             name={ROUTES.BOOKMARKS}
-            component={BookmarksScreen} // Placeholder for Bookmarks screen
+            component={BookmarksScreen}
           />
         </>
       ) : (
