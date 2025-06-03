@@ -40,7 +40,7 @@ const RegisterScreen = ({ navigation }: any) => {
       setIsMounted(false);
     };
   }, []);
-  
+
   const handleRegister = async () => {
     Keyboard.dismiss();
 
@@ -68,15 +68,7 @@ const RegisterScreen = ({ navigation }: any) => {
       } else {
         Alert.alert(
           "Registration Successful",
-          "Your account has been created successfully. Please login with your credentials.",
-          [
-            {
-              text: "Go to Login",
-              onPress: () => {
-                navigation.navigate(ROUTES.LOGIN, { email });
-              },
-            },
-          ]
+          "Your account has been created successfully."
         );
       }
     } catch (error: any) {
@@ -116,99 +108,106 @@ const RegisterScreen = ({ navigation }: any) => {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <LinearGradient
-          colors={["#f8fafc", "#f1f5f9"]}
-          style={{ flex: 1 }}
-        >
+        <LinearGradient colors={["#f8fafc", "#f1f5f9"]} style={{ flex: 1 }}>
           <ScrollView
             ref={scrollViewRef}
             style={{ flex: 1 }}
             contentContainerStyle={{
               flexGrow: 1,
-              justifyContent: 'center',
+              justifyContent: "center",
               paddingHorizontal: 24,
-              paddingVertical: 48
+              paddingVertical: 48,
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
             {/* Logo/App Name with Icon */}
-            <View style={{ alignItems: 'center', marginBottom: 40 }}>
-              <View style={{
-                width: 112,
-                height: 112,
-                borderRadius: 56,
-                overflow: 'hidden',
-                marginBottom: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 5,
-                elevation: 5,
-              }}>
+            <View style={{ alignItems: "center", marginBottom: 40 }}>
+              <View
+                style={{
+                  width: 112,
+                  height: 112,
+                  borderRadius: 56,
+                  overflow: "hidden",
+                  marginBottom: 20,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 5,
+                  elevation: 5,
+                }}
+              >
                 <LinearGradient
                   colors={["#3B82F6", "#60A5FA"]}
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    width: "100%",
+                    height: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   <Ionicons name="restaurant" size={56} color="white" />
                 </LinearGradient>
               </View>
-              <Text style={{
-                fontSize: 32,
-                fontWeight: 'bold',
-                color: '#1f2937',
-                marginBottom: 8
-              }}>
+              <Text
+                style={{
+                  fontSize: 32,
+                  fontWeight: "bold",
+                  color: "#1f2937",
+                  marginBottom: 8,
+                }}
+              >
                 Let Him Cook
               </Text>
-              <Text style={{ fontSize: 16, color: '#4b5563' }}>
+              <Text style={{ fontSize: 16, color: "#4b5563" }}>
                 Create your account
               </Text>
             </View>
 
             {/* Form with Card Effect */}
-            <View style={{
-              backgroundColor: '#fff',
-              borderRadius: 16,
-              padding: 24,
-              marginHorizontal: Platform.OS === 'ios' ? 0 : 8,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}>
+            <View
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: 16,
+                padding: 24,
+                marginHorizontal: Platform.OS === "ios" ? 0 : 8,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
               {/* Full Name Field */}
               <View style={{ marginBottom: 20 }}>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: 6
-                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: "#374151",
+                    marginBottom: 6,
+                  }}
+                >
                   Full Name
                 </Text>
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#f9fafb',
-                  borderWidth: 1,
-                  borderColor: '#e5e7eb',
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#f9fafb",
+                    borderWidth: 1,
+                    borderColor: "#e5e7eb",
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                  }}
+                >
                   <Ionicons name="person-outline" size={20} color="#6B7280" />
                   <TextInput
                     style={{
                       flex: 1,
                       paddingVertical: 14,
                       paddingHorizontal: 8,
-                      color: '#1f2937',
+                      color: "#1f2937",
                       fontSize: 16,
                     }}
                     placeholder="Enter your full name"
@@ -222,30 +221,34 @@ const RegisterScreen = ({ navigation }: any) => {
 
               {/* Email Field */}
               <View style={{ marginBottom: 20 }}>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: 6
-                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: "#374151",
+                    marginBottom: 6,
+                  }}
+                >
                   Email
                 </Text>
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#f9fafb',
-                  borderWidth: 1,
-                  borderColor: '#e5e7eb',
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#f9fafb",
+                    borderWidth: 1,
+                    borderColor: "#e5e7eb",
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                  }}
+                >
                   <Ionicons name="mail-outline" size={20} color="#6B7280" />
                   <TextInput
                     style={{
                       flex: 1,
                       paddingVertical: 14,
                       paddingHorizontal: 8,
-                      color: '#1f2937',
+                      color: "#1f2937",
                       fontSize: 16,
                     }}
                     placeholder="Enter your email"
@@ -260,30 +263,38 @@ const RegisterScreen = ({ navigation }: any) => {
 
               {/* Password Field */}
               <View style={{ marginBottom: 20 }}>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: 6
-                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: "#374151",
+                    marginBottom: 6,
+                  }}
+                >
                   Password
                 </Text>
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#f9fafb',
-                  borderWidth: 1,
-                  borderColor: '#e5e7eb',
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                }}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#6B7280" />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#f9fafb",
+                    borderWidth: 1,
+                    borderColor: "#e5e7eb",
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                  }}
+                >
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color="#6B7280"
+                  />
                   <TextInput
                     style={{
                       flex: 1,
                       paddingVertical: 14,
                       paddingHorizontal: 8,
-                      color: '#1f2937',
+                      color: "#1f2937",
                       fontSize: 16,
                     }}
                     placeholder="Create a password"
@@ -308,30 +319,38 @@ const RegisterScreen = ({ navigation }: any) => {
 
               {/* Confirm Password Field */}
               <View style={{ marginBottom: 24 }}>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: 6
-                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: "#374151",
+                    marginBottom: 6,
+                  }}
+                >
                   Confirm Password
                 </Text>
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#f9fafb',
-                  borderWidth: 1,
-                  borderColor: '#e5e7eb',
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                }}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#6B7280" />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#f9fafb",
+                    borderWidth: 1,
+                    borderColor: "#e5e7eb",
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                  }}
+                >
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color="#6B7280"
+                  />
                   <TextInput
                     style={{
                       flex: 1,
                       paddingVertical: 14,
                       paddingHorizontal: 8,
-                      color: '#1f2937',
+                      color: "#1f2937",
                       fontSize: 16,
                     }}
                     placeholder="Confirm your password"
@@ -346,7 +365,9 @@ const RegisterScreen = ({ navigation }: any) => {
                     activeOpacity={0.7}
                   >
                     <Ionicons
-                      name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                      name={
+                        showConfirmPassword ? "eye-off-outline" : "eye-outline"
+                      }
                       size={20}
                       color="#6B7280"
                     />
@@ -357,10 +378,10 @@ const RegisterScreen = ({ navigation }: any) => {
               {/* Register Button */}
               <TouchableOpacity
                 style={{
-                  overflow: 'hidden',
+                  overflow: "hidden",
                   borderRadius: 12,
                   marginBottom: 16,
-                  opacity: loading ? 0.7 : 1
+                  opacity: loading ? 0.7 : 1,
                 }}
                 activeOpacity={0.8}
                 onPress={handleRegister}
@@ -372,18 +393,20 @@ const RegisterScreen = ({ navigation }: any) => {
                   end={{ x: 1, y: 0 }}
                   style={{
                     paddingVertical: 14,
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   {loading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={{
-                      color: '#fff',
-                      fontWeight: '600',
-                      fontSize: 16
-                    }}>
+                    <Text
+                      style={{
+                        color: "#fff",
+                        fontWeight: "600",
+                        fontSize: 16,
+                      }}
+                    >
                       Register
                     </Text>
                   )}
@@ -391,13 +414,15 @@ const RegisterScreen = ({ navigation }: any) => {
               </TouchableOpacity>
 
               {/* Login Link */}
-              <View style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: 8
-              }}>
-                <Text style={{ color: '#6b7280' }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginTop: 8,
+                }}
+              >
+                <Text style={{ color: "#6b7280" }}>
                   Already have an account?{" "}
                 </Text>
                 <TouchableOpacity
@@ -405,7 +430,7 @@ const RegisterScreen = ({ navigation }: any) => {
                   style={{ padding: 8 }}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: '#3b82f6', fontWeight: '600' }}>
+                  <Text style={{ color: "#3b82f6", fontWeight: "600" }}>
                     Login
                   </Text>
                 </TouchableOpacity>
