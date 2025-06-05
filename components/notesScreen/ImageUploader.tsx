@@ -105,32 +105,32 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   return (
     <>
-    <View style={styles.container}>
-      <TouchableOpacity
-        onPress={handleImagePicker}
-        style={styles.uploadContainer}
-      >
-        {imageUri ? (
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: imageUri }} style={styles.image} />
-            <TouchableOpacity
-              onPress={removeImage}
-              style={styles.removeButton}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close-circle" size={28} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.placeholderContainer}>
-            <Ionicons name="camera-outline" size={40} color="#9CA3AF" />
-            <Text style={styles.placeholderText}>{placeholder}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    </View>
+      <View style={styles.container}>
+        <TouchableOpacity
+          onPress={handleImagePicker}
+          style={styles.uploadContainer}
+        >
+          {imageUri ? (
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: imageUri }} style={styles.image} />
+              <TouchableOpacity
+                onPress={removeImage}
+                style={styles.removeButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close-circle" size={28} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.placeholderContainer}>
+              <Ionicons name="camera-outline" size={40} color="#3b82f6" />
+              <Text style={styles.placeholderText}>{placeholder}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
 
-    {/* Image Action Sheet for Android */}
+      {/* Image Action Sheet for Android */}
       {Platform.OS === 'android' && (
         <Modal
           visible={showImageActionSheet}
@@ -180,7 +180,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                     pickFromGallery();
                   }}
                 >
-                <View style={[styles.optionIcon, styles.galleryIcon]}>
+                  <View style={[styles.optionIcon, styles.galleryIcon]}>
                     <Ionicons name="images" size={20} color="white" />
                   </View>
                   <View style={styles.optionText}>
@@ -200,14 +200,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </TouchableOpacity>
         </Modal>
       )}
-      </>
+    </>
   );
 };
 
 // Gunakan StyleSheet untuk menghindari warning dan performa yang lebih baik
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
     marginTop: 16,
   },
   uploadContainer: {
@@ -215,8 +214,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
     borderRadius: 8,
     borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#d1d5db',
+    borderStyle: 'solid',
+    borderColor: '#3b82f6',
     justifyContent: 'center',
     alignItems: 'center',
   },

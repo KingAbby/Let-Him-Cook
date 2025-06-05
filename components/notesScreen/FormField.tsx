@@ -8,14 +8,13 @@ interface FormFieldProps extends TextInputProps {
 
 export const FormField: React.FC<FormFieldProps> = ({
     label,
-    containerStyle = "mx-4 mt-4",
-    ...textInputProps 
+    ...textInputProps
 }) => {
     return (
-        <View className={containerStyle}>
-            <Text className='text-gray-700 font-medium mb-2'>{label}</Text>
+        <View className='flex-col gap-2'>
+            <Text className='text-gray-700 font-medium'>{label}</Text>
             <TextInput
-                className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
+                className="bg-white px-4 py-3 rounded-lg border border-blue-500 shadow-sm"
                 {...textInputProps}
             />
         </View>
