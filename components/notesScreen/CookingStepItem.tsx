@@ -17,31 +17,59 @@ interface CookingStepItemProps {
 
 export const CookingStepItem: React.FC<CookingStepItemProps> = ({ step, onUpdate, onRemove, showRemoveButton = false }) => {
   return (
-    <View className="flex-row mb-6 bg-neutral-200 rounded-lg p-4">
-      <View className="w-8 h-8 bg-green-600 rounded-full items-center justify-center mr-3 -mt-1">
-        <Text className="text-white font-bold text-sm">{step.step}</Text>
-      </View>
-      
-      <View className="flex-1">
-        <Text className="font-medium text-gray-800 mb-1">Step {step.step}</Text>
-        <TextInput
-          value={step.description}
-          onChangeText={(value) => onUpdate(step.id, value)}
-          placeholder="Explain the cooking steps..."
-          multiline
-          className="bg-gray-50 px-3 py-2 rounded border border-gray-200 min-h-[60px]"
-          textAlignVertical="top"
-        />
-      </View>
+    <View className="bg-blue-50 border-2 border-blue-100 rounded-xl p-4 shadow-sm">
+      <View className="flex-row">
+        {/* Enhanced step number with blue theme */}
+        <View className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-4 shadow-md">
+          <Text className="text-white font-bold text-sm">
+            {step.step}
+          </Text>
+        </View>
 
-      {showRemoveButton && onRemove && (
-        <TouchableOpacity 
-          onPress={() => onRemove(step.id)}
-          className="p-1 ml-2"
-        >
-          <Ionicons name="close-circle" size={20} color="#EF4444" />
-        </TouchableOpacity>
-      )}
+        <View className="flex-1">
+          {/* Step label with blue accent */}
+          <View className="flex-row items-center mb-3">
+            <Text className="font-bold text-blue-800 text-base">
+              Step {step.step}
+            </Text>
+            <View className="h-0.5 bg-blue-200 flex-1 ml-2" />
+          </View>
+
+          {/* Enhanced text input */}
+          <TextInput
+            value={step.description}
+            onChangeText={(value) => onUpdate(step.id, value)}
+            placeholder="Describe this cooking step in detail..."
+            multiline
+            className="bg-white px-4 py-3 rounded-lg border border-blue-200 min-h-[80px] text-gray-800"
+            textAlignVertical="top"
+            placeholderTextColor="#9CA3AF"
+            style={{
+              fontSize: 15,
+              lineHeight: 22,
+            }}
+          />
+
+          {/* Helper text */}
+          <Text className="text-blue-400 text-xs mt-2">
+            Be specific about timing, temperature, and techniques
+          </Text>
+        </View>
+
+        {/* Enhanced remove button */}
+        {showRemoveButton && onRemove && (
+          <TouchableOpacity
+            onPress={() => onRemove(step.id)}
+            className="ml-3 w-8 h-8 bg-red-100 rounded-full items-center justify-center"
+          >
+            <Ionicons
+              name="close"
+              size={16}
+              color="#EF4444"
+            />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
