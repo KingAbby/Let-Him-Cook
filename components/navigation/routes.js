@@ -1,21 +1,22 @@
 export const ROUTES = {
-  // Auth
-  LOGIN: "Login",
-  REGISTER: "Register",
+	// Auth
+	LOGIN: "Login",
+	REGISTER: "Register",
 
-  // Main Screens
-  HOME: "Home",
-  RECIPE: "Recipe",
-  NOTES: "Notes",
-  PROFILE: "Profile",
+	// Main Screens
+	HOME: "Home",
+	RECIPE: "Recipe",
+	NOTES: "Notes",
+	PROFILE: "Profile",
 
-  // Profile related screens
-  EDIT_PROFILE: "EditProfile",
-  MY_RECIPES: "MyRecipes",
+	// Profile related screens
+	EDIT_PROFILE: "EditProfile",
+	MY_RECIPES: "MyRecipes",
+	MY_RECIPE_DETAIL: "MyRecipeDetail",
 
-  // Recipe related screens
-  RECIPE_DETAIL: "RecipeDetail",
+	// Recipe related screens
+	RECIPE_DETAIL: "RecipeDetail",
 
-  // Header related screens
-  BOOKMARKS: "Bookmarks",
+	// Header related screens
+	BOOKMARKS: "Bookmarks",
 };

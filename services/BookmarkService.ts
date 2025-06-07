@@ -6,7 +6,8 @@ export interface BookmarkedRecipe {
   recipe_id: number;
   recipe_title: string;
   recipe_image: string;
-  recipe_source: string;
+  recipe_servings?: number;
+  recipe_ready_in_minutes?: number;
   created_at: string;
 }
 
@@ -16,7 +17,8 @@ export const BookmarkService = {
     id: number;
     title: string;
     image: string;
-    sourceName?: string;
+    servings?: number;
+    readyInMinutes?: number;
   }): Promise<{ success: boolean; error?: string }> {
     try {
       const { data, error } = await supabase
@@ -26,7 +28,8 @@ export const BookmarkService = {
           recipe_id: recipe.id,
           recipe_title: recipe.title,
           recipe_image: recipe.image,
-          recipe_source: recipe.sourceName || 'Spoonacular'
+          recipe_servings: recipe.servings || 0, // Default to 0 if not provided
+          recipe_ready_in_minutes: recipe.readyInMinutes || 0, // Default to 0 if not provided
         }]);
 
       if (error) {

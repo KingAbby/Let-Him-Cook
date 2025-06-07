@@ -8,51 +8,72 @@ import RecipeScreen from "../../pages/RecipeScreen";
 import NotesScreen from "../../pages/NotesScreen";
 import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
-import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
+import RecipeDetailScreen from "../../pages/MyRecipeDetailScreen";
 import TestSupabase from "../../pages/testSupabase";
 import BookmarksScreen from "../../pages/BookMarksScreen";
 
 const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
-  return (
-    <Stack.Navigator
-      initialRouteName={ROUTES.HOME}
-      screenOptions={{
-        headerShown: false,
-        animation: "slide_from_right",
-        gestureEnabled: true,
-        gestureDirection: "horizontal",
-      }}
-    >
-      {/* Home */}
-      <Stack.Screen name={ROUTES.HOME} component={HomeScreen} />
+	return (
+		<Stack.Navigator
+			initialRouteName={ROUTES.HOME}
+			screenOptions={{
+				headerShown: false,
+				animation: "slide_from_right",
+				gestureEnabled: true,
+				gestureDirection: "horizontal",
+			}}
+		>
+			{/* Home */}
+			<Stack.Screen
+				name={ROUTES.HOME}
+				component={HomeScreen}
+			/>
 
-      {/* Recipe */}
-      <Stack.Screen name={ROUTES.RECIPE} component={RecipeScreen} />
+			{/* Recipe */}
+			<Stack.Screen
+				name={ROUTES.RECIPE}
+				component={RecipeScreen}
+			/>
 
-      {/* Notes */}
-      <Stack.Screen name={ROUTES.NOTES} component={NotesScreen} />
+			{/* Notes */}
+			<Stack.Screen
+				name={ROUTES.NOTES}
+				component={NotesScreen}
+			/>
 
-      {/* Profile */}
-      <Stack.Screen name={ROUTES.PROFILE} component={ProfileScreen} />
+			{/* Profile */}
+			<Stack.Screen
+				name={ROUTES.PROFILE}
+				component={ProfileScreen}
+			/>
 
-      {/* Edit Profile */}
-      <Stack.Screen name={ROUTES.EDIT_PROFILE} component={EditProfileScreen} />
+			{/* Edit Profile */}
+			<Stack.Screen
+				name={ROUTES.EDIT_PROFILE}
+				component={EditProfileScreen}
+			/>
 
-      {/* Recipe Detail */}
-      <Stack.Screen
-        name={ROUTES.RECIPE_DETAIL}
-        component={RecipeDetailScreen}
-      />
+			{/* Recipe Detail */}
+			<Stack.Screen
+				name={ROUTES.RECIPE_DETAIL}
+				component={RecipeDetailScreen}
+			/>
 
-      {/* Bookmarks */}
-      <Stack.Screen name={ROUTES.BOOKMARKS} component={BookmarksScreen} />
+			{/* Bookmarks */}
+			<Stack.Screen
+				name={ROUTES.BOOKMARKS}
+				component={BookmarksScreen}
+			/>
 
-      {/* Test */}
-      <Stack.Screen name={ROUTES.TEST_SUPABASE} component={TestSupabase} />
-    </Stack.Navigator>
-  );
+			{/* Test */}
+			<Stack.Screen
+				name={ROUTES.TEST_SUPABASE}
+				component={TestSupabase}
+			/>
+		</Stack.Navigator>
+	);
 };
 
 export default StackNavigator;
