@@ -7,6 +7,7 @@ export interface Recipe {
     id: number;
     title: string;
     image: string;
+    sourceName: string;
 }
 
 export const searchRecipes = async (query: string): Promise<Recipe[]> => {
