@@ -24,39 +24,6 @@ export const SimplifiedIngredientItem: React.FC<SimplifiedIngredientItemProps> =
     showRemoveButton = false,
     index
 }) => {
-    const handleFullTextChange = (text: string) => {
-        const parts = text.trim().split(' ');
-
-        if (parts.length >= 3) {
-            const amount = parts[0];
-            const unit = parts[1];
-            const name = parts.slice(2).join(' ');
-
-            onUpdate(ingredient.id, 'amount', amount);
-            onUpdate(ingredient.id, 'unit', unit);
-            onUpdate(ingredient.id, 'name', name);
-        } else if (parts.length === 2) {
-            const amount = parts[0];
-            const name = parts[1];
-
-            onUpdate(ingredient.id, 'amount', amount);
-            onUpdate(ingredient.id, 'unit', '');
-            onUpdate(ingredient.id, 'name', name);
-        } else if (parts.length === 1) {
-            onUpdate(ingredient.id, 'amount', '');
-            onUpdate(ingredient.id, 'unit', '');
-            onUpdate(ingredient.id, 'name', text);
-        }
-    };
-
-    const getFullText = () => {
-        const parts = [];
-        if (ingredient.amount) parts.push(ingredient.amount);
-        if (ingredient.unit) parts.push(ingredient.unit);
-        if (ingredient.name) parts.push(ingredient.name);
-        return parts.join(' ');
-    };
-
     return (
         <View className="bg-blue-50 border-2 border-blue-100 rounded-xl p-4 shadow-sm">
             <View className="flex-row items-center">
@@ -67,19 +34,41 @@ export const SimplifiedIngredientItem: React.FC<SimplifiedIngredientItemProps> =
                     </Text>
                 </View>
 
-                {/* Simplified single input */}
-                <View className="flex-1">
-                    <TextInput
-                        value={getFullText()}
-                        onChangeText={handleFullTextChange}
-                        placeholder="e.g., 100 gram flour"
-                        className="text-gray-800 text-base font-medium"
-                        placeholderTextColor="#9CA3AF"
-                        multiline={false}
-                    />
-                    <Text className="text-blue-400 text-xs mt-1">
-                        Format: amount unit ingredient (e.g., 2 cups sugar)
-                    </Text>
+                {/* Three separate inputs */}
+                <View className="flex-1 flex-row items-center gap-2">
+                    {/* Amount input */}
+                    <View className="w-16">
+                        <TextInput
+                            value={ingredient.amount}
+                            onChangeText={(value) => onUpdate(ingredient.id, 'amount', value)}
+                            placeholder="100"
+                            className="bg-white px-2 py-2 rounded-lg border border-blue-200 text-center text-sm"
+                            placeholderTextColor="#9CA3AF"
+                            keyboardType="numeric"
+                        />
+                    </View>
+
+                    {/* Unit input */}
+                    <View className="w-20">
+                        <TextInput
+                            value={ingredient.unit}
+                            onChangeText={(value) => onUpdate(ingredient.id, 'unit', value)}
+                            placeholder="gram"
+                            className="bg-white px-2 py-2 rounded-lg border border-blue-200 text-center text-sm"
+                            placeholderTextColor="#9CA3AF"
+                        />
+                    </View>
+
+                    {/* Name input */}
+                    <View className="flex-1">
+                        <TextInput
+                            value={ingredient.name}
+                            onChangeText={(value) => onUpdate(ingredient.id, 'name', value)}
+                            placeholder="flour"
+                            className="bg-white px-3 py-2 rounded-lg border border-blue-200 text-sm"
+                            placeholderTextColor="#9CA3AF"
+                        />
+                    </View>
                 </View>
 
                 {/* Remove button */}
@@ -96,6 +85,11 @@ export const SimplifiedIngredientItem: React.FC<SimplifiedIngredientItemProps> =
                     </TouchableOpacity>
                 )}
             </View>
+
+            {/* Helper text */}
+            <Text className="text-blue-400 text-xs mt-2 ml-11">
+                Enter amount, unit, and ingredient name separately
+            </Text>
         </View>
     );
 };

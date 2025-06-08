@@ -203,11 +203,10 @@ const AddRecipeNotes = () => {
       );
 
       const validSteps = cookingSteps.filter(step => step.description.trim());
-
       // Prepare recipe data
       const recipeData = {
         user_id: user.id,
-        name: recipeName.trim(),
+        title: recipeName.trim(),
         description: description.trim(),
         prep_time: parseInt(prepTime) || 0,
         cook_time: parseInt(cookTime) || 0,
@@ -220,16 +219,19 @@ const AddRecipeNotes = () => {
       };
 
       console.log('Saving recipe data:', recipeData);
-
+      
       // Save to Supabase
       const { data, error } = await supabase
-        .from('recipes')
+        .from('myrecipes')
         .insert([recipeData])
         .select();
 
       if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+        console.error('Supabase error details:', error);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+        throw new Error(`Database error: ${error.message || 'Unknown error'}`);
       }
 
       console.log('Recipe saved successfully:', data);
@@ -400,7 +402,7 @@ const AddRecipeNotes = () => {
                 <View className="flex-row gap-2 items-center">
                   <FontAwesome6 name="book" size={20} color="#3b82f6" />
                   <Text className="font-semibold text-sm text-blue-800">
-                    List your ingredients using simple format
+                    Input your ingredients with amount, unit, and name
                   </Text>
                 </View>
 

@@ -16,6 +16,7 @@ export const ROUTES = {
 	EDIT_PROFILE: "EditProfile",
 	MY_RECIPES: "MyRecipes",
 	MY_RECIPE_DETAIL: "MyRecipeDetail",
+	ADD_RECIPE_NOTES: "AddRecipeNotes",
 
 	// Recipe related screens
 	RECIPE_DETAIL: "RecipeDetail",
