@@ -53,8 +53,7 @@ interface Recipe {
 	created_at: string | null;
 }
 
-const HEADER_HEIGHT =
-	Platform.OS === "ios" ? HEADER_HEIGHTS.ios : HEADER_HEIGHTS.android;
+const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const RecipeDetailScreen = () => {
 	const navigation = useNavigation();
@@ -63,12 +62,8 @@ const RecipeDetailScreen = () => {
 
 	const [recipe, setRecipe] = useState<Recipe | null>(null);
 	const [spoonacularRecipe, setSpoonacularRecipe] = useState<any | null>(null);
-	const [spoonacularIngredients, setSpoonacularIngredients] = useState<
-		SpoonacularIngredient[]
-	>([]);
-	const [spoonacularInstructions, setSpoonacularInstructions] = useState<
-		Instruction[]
-	>([]);
+	const [spoonacularIngredients, setSpoonacularIngredients] = useState<SpoonacularIngredient[]>([]);
+	const [spoonacularInstructions, setSpoonacularInstructions] = useState<Instruction[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isSpoonacularRecipe, setIsSpoonacularRecipe] = useState(false);
 	useEffect(() => {

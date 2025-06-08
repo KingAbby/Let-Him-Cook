@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({
   showBookmark = true,
 }) => {
   const navigation = useNavigation();
-const route = useRoute();
+  const route = useRoute();
 
   // Check if current route is Bookmarks page
   const isBookmarkPage = route.name === 'Bookmarks';
@@ -54,19 +54,19 @@ const route = useRoute();
       <View style={[styles.headerContainer, { height: headerHeight }]} className="w-full absolute z-50">
         <View className="absolute inset-0 bg-white" style={{ opacity: 0.98 }} />
         <SafeAreaView className="flex-1">
-        <View className={`flex-1 items-center justify-center px-4 ${className}`}>
-          <Text
-            className="text-gray-800 text-base font-semibold"
-            style={{
-              textShadowColor: "rgba(255, 255, 255, 0.5)",
-              textShadowOffset: { width: 0, height: 1 },
-              textShadowRadius: 1,
-            }}
-          >
-            {title}
-          </Text>
-          <View className="h-[2px] w-8 bg-blue-500/80 rounded-full mt-1" />
-        </View>
+          <View className={`flex-1 items-center justify-center px-4 ${className}`}>
+            <Text
+              className="text-gray-800 text-base font-semibold"
+              style={{
+                textShadowColor: "rgba(255, 255, 255, 0.5)",
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 1,
+              }}
+            >
+              {title}
+            </Text>
+            <View className="h-[2px] w-8 bg-blue-500/80 rounded-full mt-1" />
+          </View>
         </SafeAreaView>
         <View className="absolute bottom-0 left-0 right-0 h-[1px] bg-gray-300/50" />
         {/* Bookmark icon for recipe variant */}
@@ -87,7 +87,7 @@ const route = useRoute();
             <Ionicons name="bookmark-outline" size={24} color="#3b82f6" />
           </TouchableOpacity>
         )}
-        </View>
+      </View>
     );
   }
 
@@ -138,7 +138,7 @@ const route = useRoute();
                 }}
                 onPress={handleBookmarkPress}
               >
-                <Ionicons name="bookmark-outline" size={24} color="#3b82f6" />
+                <Ionicons name="heart-outline" size={24} color="#3b82f6" />
               </TouchableOpacity>
             ) : null}
           </View>

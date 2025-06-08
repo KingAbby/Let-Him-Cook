@@ -1,4 +1,7 @@
 export const ROUTES = {
+	// Onboarding
+	ONBOARDING: "Onboarding",
+
 	// Auth
 	LOGIN: "Login",
 	REGISTER: "Register",

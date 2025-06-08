@@ -18,11 +18,12 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
-import Header from "../components/Header";
+import Header, { HEADER_HEIGHTS } from "../components/Header";
 import * as ImagePicker from "expo-image-picker";
 import { decode } from "base64-arraybuffer";
 
-const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 120;
+const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
+
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
