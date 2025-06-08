@@ -42,8 +42,7 @@ interface Recipe {
 	created_at: string | null;
 }
 
-const HEADER_HEIGHT =
-	Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
+const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const MyRecipesScreen = () => {
 	const navigation = useNavigation<NavigationProp>();

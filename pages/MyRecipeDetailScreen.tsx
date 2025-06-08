@@ -13,7 +13,7 @@ import {
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { supabase } from "../utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
-import Header from "../components/Header";
+import Header, { HEADER_HEIGHTS } from "../components/Header";
 
 interface RouteParams {
 	recipeId: string;
@@ -46,7 +46,7 @@ interface Recipe {
 	created_at: string | null;
 }
 
-const HEADER_HEIGHT = Platform.OS === "ios" ? 150 : 120;
+const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const MyRecipeDetailScreen = () => {
 	const navigation = useNavigation();
@@ -228,11 +228,10 @@ const MyRecipeDetailScreen = () => {
 							recipe.ingredients.map((ingredient, index) => (
 								<View
 									key={ingredient.id || index}
-									className={`flex-row py-2 ${
-										index < recipe.ingredients!.length - 1
+									className={`flex-row py-2 ${index < recipe.ingredients!.length - 1
 											? "border-b border-gray-100"
 											: ""
-									}`}
+										}`}
 								>
 									<View className='w-2 h-2 rounded-full bg-blue-500 mt-2 mr-2' />
 									<Text className='text-gray-700'>
@@ -260,11 +259,10 @@ const MyRecipeDetailScreen = () => {
 							recipe.cooking_steps.map((step, index) => (
 								<View
 									key={step.id || index}
-									className={`flex-row py-3 ${
-										index < recipe.cooking_steps!.length - 1
+									className={`flex-row py-3 ${index < recipe.cooking_steps!.length - 1
 											? "border-b border-gray-100"
 											: ""
-									}`}
+										}`}
 								>
 									<View className='bg-blue-500 w-6 h-6 rounded-full items-center justify-center mr-3'>
 										<Text className='text-white font-medium'>{step.step}</Text>

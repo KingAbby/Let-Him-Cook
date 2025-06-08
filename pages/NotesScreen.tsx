@@ -1,261 +1,147 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, StatusBar, Platform } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-
-import { HEADER_HEIGHTS } from "../components/Header";
-import Header from "../components/Header";
-import { ImageUploader } from "../components/notesScreen/ImageUploader";
-import { SimplifiedIngredientItem } from "../components/notesScreen/SimplifiedIngredientItem";
-import { CookingStepItem } from "../components/notesScreen/CookingStepItem";
-import { TimeInput } from "../components/notesScreen/TimeInput";
-import { FormField } from "../components/notesScreen/FormField";
-import { SectionHeader } from "../components/notesScreen/SectionHeader";
-import { CategoryInput } from "../components/notesScreen/CategoryInput";
-
-import { supabase } from "../utils/supabase";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  StatusBar,
+  Platform,
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
-import { Entypo, Feather, FontAwesome6, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
+import { supabase } from "../utils/supabase";
+import { Ionicons } from "@expo/vector-icons";
+import Header, { HEADER_HEIGHTS } from "../components/Header";
+import RecipeCard from "../components/MyRecipeCard";
+import SearchBarTW from "../components/SearchBarTW";
+import { ROUTES } from "../components/navigation/routes";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-interface Ingredient {
+// Type for navigation parameters
+type RootStackParamList = {
+  [ROUTES.RECIPE_DETAIL]: { recipeId: string };
+  [ROUTES.ADD_RECIPE_NOTES]: undefined;
+  MainApp: { screen: string };
+};
+
+// Type for navigation
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+interface Recipe {
   id: string;
-  amount: string;
-  unit: string;
-  name: string;
-}
-
-interface CookingStep {
-  id: string;
-  step: number;
-  description: string;
-}
-
-interface ValidationErrors {
-  image?: string;
-  recipeName?: string;
-  description?: string;
-  prepTime?: string;
-  cookTime?: string;
-  servings?: string;
-  ingredients?: string;
-  cookingSteps?: string;
-  category?: string;
+  title: string;
+  description: string | null;
+  prep_time: number | null;
+  cook_time: number | null;
+  servings: string | null;
+  category: string | null;
+  image_url: string | null;
+  created_at: string | null;
 }
 
 const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const NotesScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
 
-  // State untuk form
-  const [imageUri, setImageUri] = useState<string>('');
-  const [recipeName, setRecipeName] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [prepTime, setPrepTime] = useState<string>('');
-  const [cookTime, setCookTime] = useState<string>('');
-  const [servings, setServings] = useState<string>('');
-  const [category, setCategory] = useState<string>('');
-  const [saving, setSaving] = useState<boolean>(false);
-  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
 
-  // State untuk ingredients dengan default
-  const [ingredients, setIngredients] = useState<Ingredient[]>([
-    { id: '1', amount: '', unit: '', name: '' }
-  ]);
-
-  // State untuk cooking steps dengan default
-  const [cookingSteps, setCookingSteps] = useState<CookingStep[]>([
-    { id: '1', step: 1, description: '' }
-  ]);
-
-  // Fungsi validasi
-  const validateForm = (): boolean => {
-    const newErrors: ValidationErrors = {};
-
-    if (!imageUri.trim()) newErrors.image = 'Image is required';
-    if (!recipeName.trim()) newErrors.recipeName = 'Recipe name is required';
-    if (!description.trim()) newErrors.description = 'Description is required';
-    if (!prepTime.trim()) newErrors.prepTime = 'Preparation time is required';
-    if (!cookTime.trim()) newErrors.cookTime = 'Cooking time is required';
-    if (!servings.trim()) newErrors.servings = 'Portion is required';
-    if (!category.trim()) newErrors.category = 'Category is required';
-
-    // Validasi ingredients - at least one complete ingredient
-    const hasValidIngredient = ingredients.some(
-      ing => ing.amount.trim() && ing.unit.trim() && ing.name.trim()
-    );
-    if (!hasValidIngredient) {
-      newErrors.ingredients = 'Please add at least one complete ingredient (amount, unit, and name)';
-    }
-
-    // Validasi cooking steps - at least one step with description
-    const hasValidStep = cookingSteps.some(step => step.description.trim());
-    if (!hasValidStep) {
-      newErrors.cookingSteps = 'Please add at least one cooking step';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const clearError = (field: keyof ValidationErrors) => {
-    setErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
-  };
-  // Functions untuk ingredients
-  const addIngredient = () => {
-    // Generate unique ID using timestamp to avoid duplicate keys
-    const newId = Date.now().toString();
-    setIngredients([...ingredients, { id: newId, amount: '', unit: '', name: '' }]);
-  };
-
-  const updateIngredient = (id: string, field: keyof Ingredient, value: string) => {
-    setIngredients(ingredients.map(ing =>
-      ing.id === id ? { ...ing, [field]: value } : ing
-    ));
-  };
-
-  const removeIngredient = (id: string) => {
-    if (ingredients.length > 1) {
-      setIngredients(ingredients.filter(ing => ing.id !== id));
-    }
-  };
-  // Functions untuk cooking steps
-  const addCookingStep = () => {
-    // Generate unique ID using timestamp to avoid duplicate keys
-    const newId = Date.now().toString();
-    const newStep = cookingSteps.length + 1;
-    setCookingSteps([...cookingSteps, { id: newId, step: newStep, description: '' }]);
-  };
-
-  const updateCookingStep = (id: string, description: string) => {
-    setCookingSteps(cookingSteps.map(step =>
-      step.id === id ? { ...step, description } : step
-    ));
-  };
-
-  const removeCookingStep = (id: string) => {
-    if (cookingSteps.length > 1) {
-      const filteredSteps = cookingSteps.filter(step => step.id !== id);
-      // Update step numbers after removal
-      const updatedSteps = filteredSteps.map((step, index) => ({
-        ...step,
-        step: index + 1
-      }));
-      setCookingSteps(updatedSteps);
-    }
-  };
-
-  const uploadImageToSupabase = async (uri: string): Promise<string> => {
-    try {
-      // Convert image to blob
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      // Generate unique filename
-      const fileName = `recipe_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('recipe-images')
-        .upload(fileName, blob, {
-          contentType: 'image/jpeg',
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Error uploading image:', error);
-        throw error;
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('recipe-images')
-        .getPublicUrl(fileName);
-
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error('Error in uploadImageToSupabase:', error);
-      throw error;
-    }
-  };
-
-  const saveRecipe = async () => {
-    if (!validateForm()) {
-      Alert.alert('Error', 'Please fill in all required fields correctly.');
-      return;
-    }
-
-    if (!user) {
-      Alert.alert('Error', 'You must be logged in to save a recipe.');
-      return;
-    }
-
-    setSaving(true);
+  const fetchRecipes = async () => {
+    if (!user) return;
 
     try {
-      // Upload image first
-      const imageUrl = await uploadImageToSupabase(imageUri);
-
-      // Filter out empty ingredients and steps
-      const validIngredients = ingredients.filter(
-        ing => ing.amount.trim() && ing.unit.trim() && ing.name.trim()
-      );
-
-      const validSteps = cookingSteps.filter(step => step.description.trim());
-
-      // Prepare recipe data
-      const recipeData = {
-        user_id: user.id,
-        name: recipeName.trim(),
-        description: description.trim(),
-        prep_time: parseInt(prepTime) || 0,
-        cook_time: parseInt(cookTime) || 0,
-        servings: servings.trim(),
-        category: category.trim(),
-        image_url: imageUrl,
-        ingredients: validIngredients,
-        cooking_steps: validSteps,
-        created_at: new Date().toISOString()
-      };
-
-      console.log('Saving recipe data:', recipeData);
-
-      // Save to Supabase
+      setLoading(true);
       const { data, error } = await supabase
-        .from('recipes')
-        .insert([recipeData])
-        .select();
+        .from("myrecipes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Recipe saved successfully:', data);
-
-      // Reset form
-      setImageUri('');
-      setRecipeName('');
-      setDescription('');
-      setPrepTime('');
-      setCookTime('');
-      setServings('');
-      setCategory('');
-      setIngredients([{ id: '1', amount: '', unit: '', name: '' }]);
-      setCookingSteps([{ id: '1', step: 1, description: '' }]);
-      setErrors({});
-
-      Alert.alert('Success', 'Your recipe has been saved successfully!');
-    } catch (error: any) {
-      console.error('Error saving recipe:', error);
-      Alert.alert('Error', error.message || 'Failed to save recipe. Please try again.');
+      setRecipes(data || []);
+      setFilteredRecipes(data || []);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      Alert.alert("Error", "Failed to load recipes");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
+
+  // Handle pull to refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchRecipes();
+    setRefreshing(false);
+  }, [user]);
+
+  // Filter recipes based on search query
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredRecipes(recipes);
+    } else {
+      const filtered = recipes.filter((recipe) =>
+        recipe.title.toLowerCase().includes(query.toLowerCase()) ||
+        (recipe.description?.toLowerCase().includes(query.toLowerCase())) ||
+        (recipe.category?.toLowerCase().includes(query.toLowerCase()))
+      );
+      setFilteredRecipes(filtered);
+    }
+  };
+
+  // Navigate to recipe detail
+  const handleRecipePress = (recipeId: string) => {
+    navigation.navigate(ROUTES.RECIPE_DETAIL, { recipeId });
+  };
+
+  // Navigate to add recipe screen
+  const handleAddRecipe = () => {
+    navigation.navigate(ROUTES.ADD_RECIPE_NOTES);
+  };
+
+  // Load recipes when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchRecipes();
+    }, [user])
+  );
+
+  // Render recipe item
+  const renderRecipeItem = ({ item }: { item: Recipe }) => (
+    <RecipeCard
+      recipe={item}
+      onPress={() => handleRecipePress(item.id)}
+    />
+  );
+
+  // Empty state component
+  const renderEmptyState = () => (
+    <View className="flex-1 justify-center items-center px-6 py-12">
+      <Ionicons name="restaurant-outline" size={80} color="#9CA3AF" />
+      <Text className="text-gray-500 text-lg font-medium mt-4 text-center">
+        No recipes yet
+      </Text>
+      <Text className="text-gray-400 text-sm mt-2 text-center">
+        Start creating your personal recipe collection
+      </Text>
+      <TouchableOpacity
+        onPress={handleAddRecipe}
+        className="bg-blue-500 px-6 py-3 rounded-full mt-6"
+      >
+        <Text className="text-white font-semibold">Create Your First Recipe</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -264,283 +150,72 @@ const NotesScreen = () => {
         backgroundColor="transparent"
         barStyle="dark-content"
       />
-      {/* Header menggunakan komponen */}
-      <Header title="Add Your Own Recipe" />
-      <ScrollView
+
+      {/* Header */}
+      <Header
+        title="My Recipes"
+        showBackButton={false}
+      />
+
+      <View
         className="flex-1"
-        contentContainerStyle={{
-          paddingTop: HEADER_HEIGHT,
-          paddingBottom: 32
-        }}
-        showsVerticalScrollIndicator={false}
+        style={{ marginTop: HEADER_HEIGHT }}
       >
-        <View className="flex-col gap-5 mx-4">
-          {/* Image Upload menggunakan komponen */}
-          <View className="flex-col gap-1">
-            <ImageUploader imageUri={imageUri} onImageSelected={(uri) => {
-              setImageUri(uri);
-              if (uri) clearError('image');
-            }} />
-            {errors.image && (
-              <Text className="text-sm text-red-600">
-                Please select an image for your recipe
-              </Text>
-            )}
-          </View>
-
-          {/* Recipe Name */}
-          <View className="flex-col gap-1">
-            <FormField
-              label="Recipe Name"
-              value={recipeName}
-              onChangeText={(text) => {
-                setRecipeName(text);
-                if (text.trim()) clearError('recipeName');
-              }}
-              placeholder="Example: Fried Rice"
-            />
-            {errors.recipeName && (
-              <Text className="text-sm text-red-600">
-                Recipe name is required
-              </Text>
-            )}
-          </View>
-
-          {/* Description */}
-          <View className="flex-col gap-1">
-            <FormField
-              label="Description"
-              value={description}
-              onChangeText={(text) => {
-                setDescription(text);
-                if (text.trim()) clearError('description');
-              }}
-              placeholder="Tell us about your recipes"
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-            {errors.description && (
-              <Text className="text-sm text-red-600">
-                Description is required
-              </Text>
-            )}
-          </View>
-
-          {/* Time inputs */}
-          <View>
-            {/* Prep & Cooking Time */}
-            <View className="flex-row gap-4">
-              {/* Prep Time */}
-              <View className="flex-1">
-                <TimeInput
-                  label="Prep Time"
-                  value={prepTime}
-                  onChangeText={(text) => {
-                    setPrepTime(text);
-                    if (text.trim()) clearError('prepTime');
-                  }}
-                  placeholder="15"
-                />
-                {errors.prepTime && (
-                  <Text className="text-sm text-red-600 mt-1">
-                    Preparation time is required
-                  </Text>
-                )}
-              </View>
-              {/* Cooking Time */}
-              <View className="flex-1">
-                <TimeInput
-                  label="Cooking Time"
-                  value={cookTime}
-                  onChangeText={(text) => {
-                    setCookTime(text);
-                    if (text.trim()) clearError('cookTime');
-                  }}
-                  placeholder="30"
-                />
-                {errors.cookTime && (
-                  <Text className="text-sm text-red-600 mt-1">
-                    Cooking time is required
-                  </Text>
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* Servings */}
-          <View className="flex-col gap-1">
-            <FormField
-              label="Portion"
-              value={servings}
-              onChangeText={(text) => {
-                setServings(text);
-                if (text.trim()) clearError('servings');
-              }}
-              placeholder="2-4 portion"
-            />
-            {errors.servings && (
-              <Text className="text-sm text-red-600">
-                Portion is required
-              </Text>
-            )}
-          </View>
-
-          {/* Ingredients Section & How to Cook Section */}
-          <View className="flex-col gap-5">
-
-            {/* Ingredients with simplified single input approach */}
-            <View className="flex-col gap-5">
-              <SectionHeader
-                title="Ingredients"
-                buttonText="Add Ingredient"
-                onButtonPress={addIngredient}
-              />
-
-              {/* Beautiful ingredients container */}
-              <View className="flex-col gap-4 bg-white rounded-2xl p-4 shadow-lg border border-blue-100">
-                <View className="flex-row gap-2 items-center">
-                  <FontAwesome6 name="book" size={20} color="#3b82f6" />
-                  <Text className="font-semibold text-sm text-blue-800">
-                    List your ingredients using simple format
-                  </Text>
-                </View>
-
-                {ingredients.map((ingredient, index) => (
-                  <SimplifiedIngredientItem
-                    key={ingredient.id}
-                    ingredient={ingredient}
-                    index={index}
-                    onUpdate={(id, field, value) => {
-                      updateIngredient(id, field, value);
-                      // Clear ingredient error if at least one complete ingredient exists
-                      const updatedIngredients = ingredients.map(ing =>
-                        ing.id === id ? { ...ing, [field]: value } : ing
-                      );
-                      const hasValidIngredient = updatedIngredients.some(
-                        ing => ing.amount.trim() && ing.unit.trim() && ing.name.trim()
-                      );
-                      if (hasValidIngredient) clearError('ingredients');
-                    }}
-                    onRemove={removeIngredient}
-                    showRemoveButton={ingredients.length > 1}
-                  />
-                ))}
-
-                {errors.ingredients && (
-                  <View className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <Text className="text-sm font-medium text-red-600">
-                      Please add at least one complete ingredient (amount, unit, and name)
-                    </Text>
-                  </View>
-                )}
-
-              </View>
-            </View>
-
-            {/* Cooking Steps with enhanced blue design */}
-            <View className="flex-col gap-5">
-              <SectionHeader
-                title="How to Cook"
-                buttonText="Add Step"
-                onButtonPress={addCookingStep}
-              />
-              {/* Beautiful cooking steps container */}
-              <View className="flex-col gap-4 bg-white rounded-2xl p-4 shadow-lg border border-blue-100">
-                <View className="flex-row gap-2 items-center">
-                  <Entypo name="add-to-list" size={20} color="#3b82f6" />
-                  <Text className="font-semibold text-sm text-blue-800">
-                    Detailed step-by-step cooking instructions
-                  </Text>
-                </View>
-
-                {cookingSteps.map((step) => (
-                  <CookingStepItem
-                    key={step.id}
-                    step={step}
-                    onUpdate={(id, description) => {
-                      updateCookingStep(id, description);
-                      // Clear cooking steps error if at least one step has description
-                      const updatedSteps = cookingSteps.map(s =>
-                        s.id === id ? { ...s, description } : s
-                      );
-                      const hasValidStep = updatedSteps.some(s => s.description.trim());
-                      if (hasValidStep) clearError('cookingSteps');
-                    }}
-                    onRemove={removeCookingStep}
-                    showRemoveButton={cookingSteps.length > 1}
-                  />
-                ))}
-                {errors.cookingSteps && (
-                  <View className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <Text className="text-sm font-medium text-red-600">
-                      Please add at least one cooking step
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* Additional Information with enhanced styling */}
-          <View className="flex-col gap-5">
-            {/* Enhanced section title */}
-            <View className="flex-row gap-2 items-center ">
-              <Ionicons name="information-circle" size={20} color="#3b82f6" />
-              <Text className="text-lg font-bold text-blue-800">
-                Additional Information
-              </Text>
-              <View className="h-0.5 flex-1 ml-3 bg-blue-200" />
-            </View>
-
-            {/* Category with enhanced styling */}
-            <View className="bg-white rounded-2xl p-4 shadow-lg border border-blue-100">
-              <View className="flex-col gap-1">
-                <CategoryInput
-                  label="Category"
-                  value={category}
-                  onChangeText={(text) => {
-                    setCategory(text);
-                    if (text.trim()) clearError('category');
-                  }}
-                />
-                {errors.category && (
-                  <View className="bg-red-50 border border-red-200 rounded-lg p-2">
-                    <Text className="text-sm font-medium text-red-600">
-                      Category is required
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {/* Enhanced save button */}
-            <View className="bg-white rounded-2xl p-4 shadow-lg border border-blue-100">
-              <TouchableOpacity
-                onPress={saveRecipe}
-                disabled={saving}
-                className={`rounded-xl py-4 items-center shadow-lg ${saving ? 'bg-gray-400' : 'bg-blue-500'}`}
-              >
-                {saving ? (
-                  <View className="flex-row items-center gap-2">
-                    <ActivityIndicator size="small" color="white" />
-                    <Text className="font-bold text-lg text-white">
-                      Saving Your Recipe...
-                    </Text>
-                  </View>
-                ) : (
-                  <View className="flex-row items-center gap-2">
-                    <Feather name="check-circle" size={20} color="white" />
-                    <Text className="font-bold text-lg text-white">
-                      Save Recipe
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
+        {/* Search Bar */}
+        <View className="px-4 py-3">
+          <SearchBarTW
+            value={searchQuery}
+            onChangeText={handleSearch}
+            placeholder="Search recipes..."
+            containerClassName="mb-2"
+          />
         </View>
-      </ScrollView>
+
+        {/* Content */}
+        {loading ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text className="text-gray-500">Loading notes...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredRecipes}
+            renderItem={renderRecipeItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 8,
+              paddingBottom: 100, // Space for FAB
+            }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#3B82F6"]}
+                tintColor="#3B82F6"
+              />
+            }
+            ListEmptyComponent={renderEmptyState}
+          />)}
+
+        {/* Floating Action Button - Only show when there are recipes */}
+        {!loading && filteredRecipes.length > 0 && (
+          <TouchableOpacity
+            onPress={handleAddRecipe}
+            className="absolute bottom-6 right-6 bg-blue-500 w-14 h-14 rounded-full items-center justify-center shadow-lg"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}
+          >
+            <Ionicons name="add" size={28} color="white" />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };

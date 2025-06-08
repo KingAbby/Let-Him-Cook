@@ -94,7 +94,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 						/>
 					) : (
 						<Ionicons
-							name={isBookmarked ? "bookmark" : "bookmark-outline"}
+							name={isBookmarked ? "heart" : "heart-outline"}
 							size={20}
 							color='#ffffff'
 						/>

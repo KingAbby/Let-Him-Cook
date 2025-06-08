@@ -10,13 +10,12 @@ import {
   Image,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import Header from "../components/Header";
+import Header, { HEADER_HEIGHTS } from "../components/Header";
 import ProfileButton from "../components/ProfileButton";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { ROUTES } from "../components/navigation/routes";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { HEADER_HEIGHTS } from '../components/Header';
 
 const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
@@ -67,7 +66,7 @@ const HomeScreen = ({ navigation }) => {
       {/* Header positioned absolutely so it stays fixed at the top */}
       <Header
         title="Let's Cook"
-        
+
       />
 
       {/* Main Content with padding top to accommodate the fixed header */}
@@ -77,8 +76,8 @@ const HomeScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         {/* Welcome Section with enhanced styling */}
-        <View className="px-5 py-6">
-          <View className="bg-white rounded-3xl shadow-lg overflow-hidden mb-6">
+        <View className="px-5 py-6 flex-col gap-6">
+          <View className="bg-white rounded-3xl shadow-lg border-hairline border-blue-500">
             <View className="bg-gradient-to-r from-blue-500 to-blue-400 px-6 py-6">
               <View className="flex flex-row justify-between items-center">
                 <View>
@@ -118,7 +117,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
 
           {/* Quick Access Section */}
-          <View className="mb-6">
+          <View>
             <Text className="text-xl font-bold text-gray-800 mb-3">
               Quick Access
             </Text>
@@ -126,26 +125,26 @@ const HomeScreen = ({ navigation }) => {
               <View className="flex flex-row justify-around">
                 <TouchableOpacity
                   className="items-center"
-                  onPress={() => navigation.navigate(ROUTES.RECIPE)}
+                  onPress={() => navigation.navigate(ROUTES.EDIT_PROFILE)}
                 >
                   <View className="w-16 h-16 bg-blue-100 rounded-full items-center justify-center mb-2">
                     <Ionicons
-                      name="restaurant-outline"
+                      name="pencil-outline"
                       size={28}
                       color="#3b82f6"
                     />
                   </View>
-                  <Text className="text-gray-700">Recipes</Text>
+                  <Text className="text-gray-700">Edit Profile</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  className="items-center"
-                  onPress={() => navigation.navigate(ROUTES.NOTES)}
+                  className="flex-col gap-2 items-center"
+                  onPress={() => navigation.navigate(ROUTES.MY_RECIPES)}
                 >
-                  <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-2">
+                  <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center">
                     <Ionicons name="book-outline" size={28} color="#10b981" />
                   </View>
-                  <Text className="text-gray-700">Notes</Text>
+                  <Text className="text-gray-700">My Recipes</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -162,7 +161,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
 
           {/* Recipe Inspiration Card */}
-          <View className="mb-4">
+          <View>
             <Text className="text-xl font-bold text-gray-800 mb-3">
               Recipe Inspiration
             </Text>
