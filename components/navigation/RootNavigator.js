@@ -10,6 +10,7 @@ import { ActivityIndicator, View } from "react-native";
 import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
 import MyRecipeDetailScreen from "../../pages/MyRecipeDetailScreen";
+import AddRecipeNotes from "../../pages/AddRecipeNotes";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 import BookmarksScreen from "../../pages/BookMarksScreen";
 import MyRecipesScreen from "../../pages/MyRecipesScreen";
@@ -73,6 +74,7 @@ const RootNavigator = () => {
 			console.error('Error completing onboarding:', error);
 		}
 	};
+
 	if (loading || (user && checkingOnboarding)) {
 		return (
 			<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -83,6 +85,7 @@ const RootNavigator = () => {
 			</View>
 		);
 	}
+	
 	return (
 		<RootStack.Navigator screenOptions={{ headerShown: false }}>
 			{user ? (
@@ -105,6 +108,10 @@ const RootNavigator = () => {
 						<RootStack.Screen
 							name={ROUTES.EDIT_PROFILE}
 							component={EditProfileScreen}
+						/>
+						<RootStack.Screen
+							name={ROUTES.ADD_RECIPE_NOTES}
+							component={AddRecipeNotes}
 						/>
 						<RootStack.Screen
 							name={ROUTES.MY_RECIPE_DETAIL}
