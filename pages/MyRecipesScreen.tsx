@@ -15,7 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import Header, { HEADER_HEIGHTS } from "../components/Header";
-import RecipeCard from "../components/MyRecipeCard";
+import RecipeCard from "../components/recipe/MyRecipeCard";
 import SearchBarTW from "../components/SearchBarTW";
 import { ROUTES } from "../components/navigation/routes";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -42,7 +42,8 @@ interface Recipe {
 	created_at: string | null;
 }
 
-const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
+const HEADER_HEIGHT =
+	Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const MyRecipesScreen = () => {
 	const navigation = useNavigation<NavigationProp>();
@@ -88,9 +89,7 @@ const MyRecipesScreen = () => {
 	useFocusEffect(
 		useCallback(() => {
 			fetchUserRecipes();
-			return () => {
-				// cleanup if needed
-			};
+			return () => {};
 		}, [user])
 	);
 
@@ -160,24 +159,6 @@ const MyRecipesScreen = () => {
 		}
 	};
 
-	const getTotalCookingTime = (
-		prepTime: number | null,
-		cookTime: number | null
-	) => {
-		const total = (prepTime || 0) + (cookTime || 0);
-		return total > 0 ? `${total} min` : "-";
-	};
-
-	// Format date for display
-	const formatDate = (dateString: string | null) => {
-		if (!dateString) return "";
-		const date = new Date(dateString);
-		return date.toLocaleDateString(undefined, {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		});
-	};
 	const renderRecipeItem = ({ item }: { item: Recipe }) => (
 		<RecipeCard
 			recipe={item}
@@ -211,70 +192,86 @@ const MyRecipesScreen = () => {
 
 	return (
 		<View className='flex-1 bg-gray-50'>
+			{/* Set status bar to translucent for content to appear underneath */}
 			<StatusBar
 				translucent
 				backgroundColor='transparent'
 				barStyle='dark-content'
 			/>
+			{/* Header positioned absolutely so it stays fixed at the top */}
 			<Header
 				title='My Recipes'
 				showBackButton={true}
 			/>
+			{/* Fixed Search Bar */}
 			<View
-				className='flex-1'
-				style={{ marginTop: HEADER_HEIGHT }}
+				style={{
+					position: "absolute",
+					top: HEADER_HEIGHT,
+					left: 0,
+					right: 0,
+					zIndex: 10,
+					backgroundColor: "#f9fafb",
+				}}
 			>
-				{/* Search Bar */}
-				<View className='px-4 pb-3'>
+				<View className='px-5 py-4'>
 					<SearchBarTW
 						placeholder='Search recipes...'
 						value={searchQuery}
 						onChangeText={handleSearch}
 						onClear={() => handleSearch("")}
-						containerClassName='mb-3'
+						containerClassName='w-full border border-gray-200'
 					/>
 				</View>
-				{loading ? (
-					<View className='flex-1 items-center justify-center'>
-						<ActivityIndicator
-							size='large'
-							color='#3B82F6'
-						/>
-					</View>
-				) : (
-					<FlatList
-						data={filteredRecipes}
-						keyExtractor={(item) => item.id}
-						renderItem={renderRecipeItem}
-						contentContainerStyle={{ paddingTop: 4, paddingBottom: 20 }}
-						ListEmptyComponent={renderEmptyState}
-						refreshControl={
-							<RefreshControl
-								refreshing={refreshing}
-								onRefresh={onRefresh}
-							/>
-						}
-					/>
-				)}
-				{/* Floating Action Button */}
-				<TouchableOpacity
-					className='absolute bottom-6 right-6 bg-blue-500 w-14 h-14 rounded-full items-center justify-center shadow-lg'
-					onPress={handleCreateRecipe}
-					style={{
-						shadowColor: "#000",
-						shadowOffset: { width: 0, height: 2 },
-						shadowOpacity: 0.25,
-						shadowRadius: 3.84,
-						elevation: 5,
-					}}
-				>
-					<Ionicons
-						name='add'
-						size={30}
-						color='white'
-					/>
-				</TouchableOpacity>
+				<View className='h-2 bg-gradient-to-b from-gray-100 to-transparent' />
 			</View>
+			{/* Main Content with padding top to accommodate the fixed header and search bar */}
+			{loading ? (
+				<View
+					className='flex-1 items-center justify-center'
+					style={{ paddingTop: HEADER_HEIGHT + 80 }}
+				>
+					<ActivityIndicator
+						size='large'
+						color='#3B82F6'
+					/>
+				</View>
+			) : (
+				<FlatList
+					data={filteredRecipes}
+					keyExtractor={(item) => item.id}
+					renderItem={renderRecipeItem}
+					contentContainerStyle={{ paddingTop: HEADER_HEIGHT + 80 }}
+					ListEmptyComponent={renderEmptyState}
+					refreshControl={
+						<RefreshControl
+							refreshing={refreshing}
+							onRefresh={onRefresh}
+							colors={["#3b82f6"]}
+							tintColor={"#3b82f6"}
+							progressViewOffset={HEADER_HEIGHT}
+						/>
+					}
+				/>
+			)}
+			{/* Floating Action Button */}
+			<TouchableOpacity
+				className='absolute bottom-6 right-6 bg-blue-500 w-14 h-14 rounded-full items-center justify-center shadow-lg'
+				onPress={handleCreateRecipe}
+				style={{
+					shadowColor: "#000",
+					shadowOffset: { width: 0, height: 2 },
+					shadowOpacity: 0.25,
+					shadowRadius: 3.84,
+					elevation: 5,
+				}}
+			>
+				<Ionicons
+					name='add'
+					size={30}
+					color='white'
+				/>
+			</TouchableOpacity>
 		</View>
 	);
 };

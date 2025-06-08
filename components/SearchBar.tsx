@@ -45,7 +45,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
 	return (
 		<View
-			className={`flex-row items-center bg-white rounded-full px-4 py-2 shadow-sm ${
+			className={`flex-row items-center bg-white rounded-full px-4 py-2 shadow-sm border-blue-500 ${
 				isFocused ? "shadow-md" : ""
 			} ${containerClassName || ""}`}
 		>
@@ -57,7 +57,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 			/>
 
 			<TextInput
-				className='flex-1 text-gray-800 text-base py-0.5'
+				className='flex-1 text-gray-800 text-base py-0.5 border-blue-500'
 				placeholder={placeholder}
 				placeholderTextColor='#9ca3af'
 				value={value}

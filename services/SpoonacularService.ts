@@ -9,6 +9,8 @@ export interface Recipe {
     image: string;
     servings: number;
     readyInMinutes: number;
+    cookingMinutes?: number;
+    preparationMinutes?: number;
 }
 
 export interface Amount {
@@ -69,7 +71,9 @@ export const searchRecipes = async (query: string): Promise<Recipe[]> => {
         const recipes = response.data.results.map(recipe => ({
             ...recipe,
             servings: recipe.servings || 4,
-            readyInMinutes: recipe.readyInMinutes || 30
+            readyInMinutes: recipe.readyInMinutes || 30,
+            cookingMinutes: recipe.cookingMinutes || 15,
+            preparationMinutes: recipe.preparationMinutes || 15,
         }));
 
         return recipes;
@@ -93,6 +97,8 @@ export const getRandomRecipe = async (): Promise<Recipe> => {
         const recipe = response.data.recipes[0];
         recipe.servings = recipe.servings || 4;
         recipe.readyInMinutes = recipe.readyInMinutes || 30;
+        recipe.cookingMinutes = recipe.cookingMinutes || 15;
+        recipe.preparationMinutes = recipe.preparationMinutes || 15;
 
         return recipe;
     } catch (error) {
@@ -121,11 +127,6 @@ export const getRecipeIngredients = async (recipeId: number): Promise<Ingredient
     }
 }
 
-/**
- * Gets the step-by-step instructions for a specific recipe
- * @param recipeId The ID of the recipe
- * @returns Array of instruction objects with steps
- */
 export const getRecipeInstructions = async (recipeId: number): Promise<Instruction[]> => {
     try {
         const response = await axios.get(`${BASE_URL}/recipes/${recipeId}/analyzedInstructions`, {

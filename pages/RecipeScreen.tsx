@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
 	View,
-	Text,
-	ActivityIndicator,
 	TouchableOpacity,
 	ScrollView,
 	StatusBar,
@@ -22,8 +20,10 @@ import { bookmarkEventService } from "../services/BookmarkEventService";
 import { Ionicons } from "@expo/vector-icons";
 import Header, { HEADER_HEIGHTS } from "../components/Header";
 import { useAuth } from "../context/AuthContext";
+import RecipeGrid from "../components/recipe/RecipeGrid";
 import SearchBarTW from "../components/SearchBarTW";
-import RecipeCard from "../components/RecipeCard";
+import LoadingState from "../components/recipe/LoadingState";
+import EmptyState from "../components/recipe/EmptyState";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -86,7 +86,7 @@ const RecipeScreen = ({ navigation }) => {
 				setLoading(true);
 			}
 
-			const promises = Array(4)
+			const promises = Array(1)
 				.fill(0)
 				.map(() => getRandomRecipe());
 			const randomRecipes = await Promise.all(promises);
@@ -166,16 +166,16 @@ const RecipeScreen = ({ navigation }) => {
 				}
 
 				const message = isCurrentlyBookmarked
-					? "Recipe removed from bookmarks"
-					: "Recipe added to bookmarks";
+					? "Recipe removed from favorites"
+					: "Recipe added to favorites";
 
 				console.log(message);
 			} else {
-				Alert.alert("Error", result.error || "Failed to update bookmark");
+				Alert.alert("Error", result.error || "Failed to update favorites");
 			}
 		} catch (error) {
-			console.error("Error toggling bookmark:", error);
-			Alert.alert("Error", "Failed to update bookmark");
+			console.error("Error toggling favorite:", error);
+			Alert.alert("Error", "Failed to update favorite");
 		} finally {
 			setBookmarkLoading((prev) => {
 				const newSet = new Set(prev);
@@ -214,7 +214,6 @@ const RecipeScreen = ({ navigation }) => {
 			setIsSearching(false);
 		}
 	};
-
 	const handleClearSearch = () => {
 		setSearchQuery("");
 		if (isSearching) {
@@ -222,65 +221,74 @@ const RecipeScreen = ({ navigation }) => {
 			setIsSearching(false);
 		}
 	};
-	const renderRecipeCard = (item: Recipe, index: number) => {
-		const isBookmarked = bookmarkedRecipes.has(item.id);
-		const isBookmarkLoading = bookmarkLoading.has(item.id);
 
-		return (
-			<RecipeCard
-				key={item.id.toString()}
-				item={item}
-				width={CARD_WIDTH}
-				isBookmarked={isBookmarked}
-				isBookmarkLoading={isBookmarkLoading}
-				onToggleBookmark={toggleBookmark}
-				onPress={(recipe) => navigation.navigate("RecipeDetail", { recipe })}
-			/>
-		);
-	};
-
-	const renderRecipeGrid = () => {
-		const rows = [];
-		for (let i = 0; i < recipes.length; i += 2) {
-			rows.push(
-				<View
-					key={i}
-					className='flex-row justify-between mb-4'
-				>
-					{renderRecipeCard(recipes[i], i)}
-					{recipes[i + 1] && renderRecipeCard(recipes[i + 1], i + 1)}
-				</View>
-			);
-		}
-		return rows;
-	};
-
-	return (
-		<View className='flex-1 bg-gray-50'>
-			<StatusBar
-				translucent
-				backgroundColor='transparent'
-				barStyle='dark-content'
-			/>
-			<Header
-				title='Recipes'
-				rightIcon={
-					<TouchableOpacity onPress={onRefresh}>
-						<Ionicons
-							name='refresh-outline'
-							size={24}
-							color='black'
-						/>
-					</TouchableOpacity>
-				}
-				onRightIconPress={onRefresh}
-			/>
+	// Recipe rendering is now handled by the RecipeGrid component	return (
+	<View className='flex-1 bg-gray-50'>
+		{/* Set status bar to translucent for content to appear underneath */}
+		<StatusBar
+			translucent
+			backgroundColor='transparent'
+			barStyle='dark-content'
+		/>
+		{/* Header positioned absolutely so it stays fixed at the top */}
+		<Header
+			title='Recipes'
+			rightIcon={
+				<TouchableOpacity onPress={onRefresh}>
+					<Ionicons
+						name='refresh-outline'
+						size={24}
+						color='black'
+					/>
+				</TouchableOpacity>
+			}
+			onRightIconPress={onRefresh}
+		/>
+		{/* Fixed Search Bar */}
+		<View
+			style={{
+				position: "absolute",
+				top: headerHeight,
+				left: 0,
+				right: 0,
+				zIndex: 10,
+				backgroundColor: "#f9fafb",
+			}}
+		>
+			<View className='px-5 py-4'>
+				<SearchBarTW
+					placeholder='Search recipes...'
+					value={searchQuery}
+					onChangeText={setSearchQuery}
+					onSubmit={handleSearch}
+					onClear={handleClearSearch}
+					containerClassName='w-full border border-blue-500'
+				/>
+			</View>
+			<View className='h-2 bg-gradient-to-b from-gray-100 to-transparent' />
+		</View>{" "}
+		{/* Main Content with padding top to accommodate the fixed header and search bar */}
+		{loading ? (
+			<View
+				className='flex-1 items-center justify-center'
+				style={{ paddingTop: headerHeight + 80 }}
+			>
+				<LoadingState isSearching={isSearching} />
+			</View>
+		) : recipes.length === 0 ? (
+			<View
+				className='flex-1 items-center justify-center'
+				style={{ paddingTop: headerHeight + 80 }}
+			>
+				<EmptyState
+					searchQuery={searchQuery}
+					onClearSearch={handleClearSearch}
+				/>
+			</View>
+		) : (
 			<ScrollView
 				className='flex-1'
-				contentContainerStyle={{
-					flexGrow: 1,
-					paddingTop: headerHeight + 20,
-				}}
+				contentContainerStyle={{ paddingTop: headerHeight + 84 }}
 				showsVerticalScrollIndicator={false}
 				refreshControl={
 					<RefreshControl
@@ -288,64 +296,25 @@ const RecipeScreen = ({ navigation }) => {
 						onRefresh={onRefresh}
 						colors={["#3b82f6"]}
 						tintColor={"#3b82f6"}
+						progressViewOffset={headerHeight + 60}
 					/>
 				}
 			>
-				<View className='px-4 pb-6'>
-					{/* Search Bar */}
-					<View className='mb-4 mt-1 w-full'>
-						<SearchBarTW
-							placeholder='Search Recipe'
-							value={searchQuery}
-							onChangeText={setSearchQuery}
-							onSubmit={handleSearch}
-							onClear={handleClearSearch}
-							containerClassName='w-full'
-						/>
-					</View>
-					{loading ? (
-						<View className='items-center justify-center py-12'>
-							<ActivityIndicator
-								size='large'
-								color='#3b82f6'
-							/>
-							<Text className='text-gray-500 mt-2 text-sm'>
-								{isSearching
-									? "Searching recipes..."
-									: "Loading delicious recipes..."}
-							</Text>
-						</View>
-					) : recipes.length === 0 ? (
-						<View className='items-center justify-center py-16'>
-							<Ionicons
-								name='search-outline'
-								size={50}
-								color='#d1d5db'
-							/>
-							<Text className='text-gray-500 mt-4 font-medium text-base'>
-								No recipes found
-							</Text>
-							<Text className='text-gray-400 text-center mt-1 max-w-xs'>
-								{searchQuery
-									? `We couldn't find any recipes matching "${searchQuery}"`
-									: "Try searching for a recipe"}
-							</Text>
-							{searchQuery && (
-								<TouchableOpacity
-									onPress={handleClearSearch}
-									className='mt-5 bg-blue-500 px-5 py-2.5 rounded-full'
-								>
-									<Text className='text-white font-medium'>Clear Search</Text>
-								</TouchableOpacity>
-							)}
-						</View>
-					) : (
-						<View className='flex-1'>{renderRecipeGrid()}</View>
-					)}
+				<View className='px-5 py-6 flex-col gap-6'>
+					<RecipeGrid
+						recipes={recipes}
+						cardWidth={CARD_WIDTH}
+						bookmarkedRecipes={bookmarkedRecipes}
+						bookmarkLoading={bookmarkLoading}
+						toggleBookmark={toggleBookmark}
+						onPressRecipe={(recipe) =>
+							navigation.navigate("RecipeDetail", { recipe })
+						}
+					/>
 				</View>
 			</ScrollView>
-		</View>
-	);
+		)}
+	</View>;
 };
 
 export default RecipeScreen;
