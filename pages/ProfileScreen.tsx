@@ -24,7 +24,7 @@ type RootStackParamList = {
   [ROUTES.EDIT_PROFILE]: undefined;
   [ROUTES.RECIPE_DETAIL]: { recipeId: string };
   [ROUTES.NOTES]: undefined;
-  [ROUTES.MY_RECIPES]: undefined;
+  [ROUTES.MY_COLLECTION]: undefined;
   MainApp: { screen: string };
 };
 
@@ -192,11 +192,11 @@ const ProfileScreen = () => {
         <View className="h-2 bg-gray-100 w-full my-2" />
 
         <View className="flex-col gap-8">
-          {/* My Recipes Section */}
+          {/* Collection Section */}
           <View className="px-4 pt-4">
             <View className="mb-4">
               <Text className="text-xl font-bold text-gray-800 mb-2">
-                My Recipes
+                Collection
               </Text>
               <Text className="text-gray-500">
                 View and manage all your saved recipes
@@ -208,19 +208,18 @@ const ProfileScreen = () => {
               <TouchableOpacity
                 onPress={() => {
                   try {
-                    navigation.navigate(ROUTES.MY_RECIPES);
+                    navigation.navigate(ROUTES.MY_COLLECTION);
                   } catch (error) {
                     console.error("Navigation error:", error);
                     // Fallback method if direct navigation fails
-                    const navigationRef =
-                      require("../components/navigation/navigationRef").default;
+                    const navigationRef = require("../components/navigation/navigationRef").default;
                     if (navigationRef.isReady()) {
                       const {
                         CommonActions,
                       } = require("@react-navigation/native");
                       navigationRef.dispatch(
                         CommonActions.navigate({
-                          name: ROUTES.MY_RECIPES,
+                          name: ROUTES.MY_COLLECTION,
                         })
                       );
                     }
@@ -230,49 +229,10 @@ const ProfileScreen = () => {
               >
                 <View className="flex-row gap-3 items-center">
                   <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                    <Ionicons name="book-outline" size={20} color="#3B82F6" />
+                    <Ionicons name="library-outline" size={20} color="#3B82F6" />
                   </View>
                   <Text className="text-gray-800 font-medium">
-                    View My Recipes
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => {
-                  try {
-                    navigation.navigate("MainApp", {
-                      screen: ROUTES.NOTES,
-                    });
-                  } catch (error) {
-                    console.error("Navigation error:", error);
-                    // Fallback method if direct navigation fails
-                    const navigationRef =
-                      require("../components/navigation/navigationRef").default;
-                    if (navigationRef.isReady()) {
-                      const {
-                        CommonActions,
-                      } = require("@react-navigation/native");
-                      navigationRef.dispatch(
-                        CommonActions.navigate({
-                          name: "MainApp",
-                          params: {
-                            screen: ROUTES.NOTES,
-                          },
-                        })
-                      );
-                    }
-                  }
-                }}
-                className="bg-white rounded-xl shadow-sm p-4 flex-row justify-between items-center"
-              >
-                <View className="flex-row gap-3 items-center">
-                  <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
-                    <Ionicons name="add-outline" size={24} color="#22C55E" />
-                  </View>
-                  <Text className="text-gray-800 font-medium">
-                    Create New Recipe
+                    View Collection
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />

@@ -12,8 +12,11 @@ import EditProfileScreen from "../../pages/EditProfileScreen";
 import AddRecipeNotes from "../../pages/AddRecipeNotes";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 import BookmarksScreen from "../../pages/BookMarksScreen";
-import MyRecipesScreen from "../../pages/MyRecipesScreen";
 import { OnboardingService } from "../../services/OnboardingService";
+import MyCollectionScreen from "../../pages/MyCollectionScreen";
+import CreateCollectionScreen from "../../pages/CreateCollectionScreen";
+import CollectionDetailScreen from "../../pages/CollectionDetailScreen";
+import NotesScreen from "../../pages/NotesScreen";
 
 const RootStack = createStackNavigator();
 const AuthStack = createStackNavigator();
@@ -51,6 +54,7 @@ const RootNavigator = () => {
 			setCheckingOnboarding(false);
 		}
 	}, [user]);
+
 	const checkOnboardingStatus = async () => {
 		setCheckingOnboarding(true);
 		try {
@@ -104,19 +108,34 @@ const RootNavigator = () => {
 							component={ProfileScreen}
 						/>
 
+						{/* Notes Screen */}
+						<RootStack.Screen
+							name={ROUTES.NOTES}
+							component={NotesScreen}
+						/>
+
 						{/* Tambahkan screen lain yang perlu diakses dari stack utama */}
 						<RootStack.Screen
 							name={ROUTES.EDIT_PROFILE}
 							component={EditProfileScreen}
 						/>
 						<RootStack.Screen
+							name={ROUTES.MY_COLLECTION}
+							component={MyCollectionScreen}
+						/>
+						<RootStack.Screen
+							name={ROUTES.CREATE_COLLECTION}
+							component={CreateCollectionScreen}
+						/>
+						<RootStack.Screen
+							name={ROUTES.COLLECTION_DETAIL}
+							component={CollectionDetailScreen}
+						/>
+						<RootStack.Screen
 							name={ROUTES.ADD_RECIPE_NOTES}
 							component={AddRecipeNotes}
 						/>
-						<RootStack.Screen
-							name={ROUTES.MY_RECIPES}
-							component={MyRecipesScreen}
-						/>
+
 						<RootStack.Screen
 							name={ROUTES.RECIPE_DETAIL}
 							component={RecipeDetailScreen}

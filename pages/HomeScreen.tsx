@@ -9,13 +9,12 @@ import {
 	Image,
 } from "react-native";
 import Header, { HEADER_HEIGHTS } from "../components/Header";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, SimpleLineIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { ROUTES } from "../components/navigation/routes";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const HEADER_HEIGHT =
-	Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
+const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const HomeScreen = ({ navigation }) => {
 	const { user, signOut } = useAuth();
@@ -119,44 +118,44 @@ const HomeScreen = ({ navigation }) => {
 							<View className='flex flex-row justify-around'>
 								<TouchableOpacity
 									className='items-center'
-									onPress={() => navigation.navigate(ROUTES.EDIT_PROFILE)}
+									onPress={() => navigation.navigate(ROUTES.ADD_RECIPE_NOTES)}
 								>
 									<View className='w-16 h-16 bg-blue-100 rounded-full items-center justify-center mb-2'>
+										<SimpleLineIcons
+											name='notebook'
+											size={28}
+											color='#3b82f6'
+										/>
+									</View>
+									<Text className='text-gray-700'>Add Recipe</Text>
+								</TouchableOpacity>
+
+								<TouchableOpacity
+									className='flex-col gap-2 items-center'
+									onPress={() => navigation.navigate(ROUTES.EDIT_PROFILE)}
+								>
+									<View className='w-16 h-16 bg-green-100 rounded-full items-center justify-center'>
 										<Ionicons
 											name='pencil-outline'
 											size={28}
-											color='#3b82f6'
+											color='#10b981'
 										/>
 									</View>
 									<Text className='text-gray-700'>Edit Profile</Text>
 								</TouchableOpacity>
 
 								<TouchableOpacity
-									className='flex-col gap-2 items-center'
-									onPress={() => navigation.navigate(ROUTES.MY_RECIPES)}
-								>
-									<View className='w-16 h-16 bg-green-100 rounded-full items-center justify-center'>
-										<Ionicons
-											name='book-outline'
-											size={28}
-											color='#10b981'
-										/>
-									</View>
-									<Text className='text-gray-700'>My Recipes</Text>
-								</TouchableOpacity>
-
-								<TouchableOpacity
 									className='items-center'
-									onPress={() => console.log("Favorites")}
+									onPress={() => navigation.navigate(ROUTES.MY_COLLECTION)}
 								>
 									<View className='w-16 h-16 bg-amber-100 rounded-full items-center justify-center mb-2'>
 										<Ionicons
-											name='heart-outline'
+											name='library-outline'
 											size={28}
 											color='#f59e0b'
 										/>
 									</View>
-									<Text className='text-gray-700'>Favorites</Text>
+									<Text className='text-gray-700'>Collections</Text>
 								</TouchableOpacity>
 							</View>
 						</View>

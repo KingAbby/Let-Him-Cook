@@ -17,9 +17,10 @@ interface Recipe {
 interface RecipeCardProps {
 	recipe: Recipe;
 	onPress: (recipeId: string) => void;
+	onAddToCollection?: (recipe: Recipe) => void;
 }
 
-const RecipeCard = ({ recipe, onPress }: RecipeCardProps) => {
+const RecipeCard = ({ recipe, onPress, onAddToCollection }: RecipeCardProps) => {
 	// Format date for display
 	const formatDate = (dateString: string | null) => {
 		if (!dateString) return "";

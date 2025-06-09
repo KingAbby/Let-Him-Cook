@@ -219,7 +219,7 @@ const AddRecipeNotes = () => {
       };
 
       console.log('Saving recipe data:', recipeData);
-      
+
       // Save to Supabase
       const { data, error } = await supabase
         .from('myrecipes')
@@ -265,7 +265,11 @@ const AddRecipeNotes = () => {
         barStyle="dark-content"
       />
       {/* Header menggunakan komponen */}
-      <Header title="Add Your Own Recipe Notes" />
+      <Header
+        title="Add Your Own Recipe Notes"
+        showBackButton={true}
+        showBookmark={false}
+      />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{

@@ -9,6 +9,7 @@ import {
 	RefreshControl,
 	StatusBar,
 	Platform,
+	Modal,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
@@ -17,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Header, { HEADER_HEIGHTS } from "../components/Header";
 import RecipeCard from "../components/recipe/MyRecipeCard";
 import SearchBarTW from "../components/SearchBarTW";
+import CollectionPickerModal from "../components/collection/CollectionPickerModal";
 import { ROUTES } from "../components/navigation/routes";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -54,6 +56,9 @@ const NotesScreen = () => {
 	const [refreshing, setRefreshing] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+	const [showCollectionPicker, setShowCollectionPicker] = useState(false);
+	const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+	const [showActionSheet, setShowActionSheet] = useState(false);
 
 	const fetchRecipes = async () => {
 		if (!user) return;
@@ -106,6 +111,38 @@ const NotesScreen = () => {
 		navigation.navigate(ROUTES.RECIPE_DETAIL, { recipeId });
 	};
 
+	// Show action sheet when recipe card is pressed
+	const handleRecipeCardPress = (recipe: Recipe) => {
+		setSelectedRecipe(recipe);
+		setShowActionSheet(true);
+	};
+
+	// Handle add to collection
+	const handleAddToCollection = () => {
+		setShowActionSheet(false);
+		setShowCollectionPicker(true);
+	};
+
+	// Handle view recipe details
+	const handleViewRecipe = () => {
+		if (selectedRecipe) {
+			setShowActionSheet(false);
+			handleRecipePress(selectedRecipe.id);
+		}
+	};
+
+	// Close action sheet
+	const closeActionSheet = () => {
+		setShowActionSheet(false);
+		setSelectedRecipe(null);
+	};
+
+	// Close collection picker
+	const closeCollectionPicker = () => {
+		setShowCollectionPicker(false);
+		setSelectedRecipe(null);
+	};
+
 	// Navigate to add recipe screen
 	const handleAddRecipe = () => {
 		navigation.navigate(ROUTES.ADD_RECIPE_NOTES);
@@ -122,7 +159,7 @@ const NotesScreen = () => {
 	const renderRecipeItem = ({ item }: { item: Recipe }) => (
 		<RecipeCard
 			recipe={item}
-			onPress={() => handleRecipePress(item.id)}
+			onPress={() => handleRecipeCardPress(item)}
 		/>
 	);
 
@@ -160,8 +197,9 @@ const NotesScreen = () => {
 			/>
 			{/* Header positioned absolutely so it stays fixed at the top */}
 			<Header
-				title='My Recipes'
+				title='My Recipe Notes'
 				showBackButton={false}
+				showBookmark={false}
 			/>
 
 			{/* Fixed Search Bar that doesn't scroll */}
@@ -238,6 +276,82 @@ const NotesScreen = () => {
 					/>
 				</TouchableOpacity>
 			)}
+
+			{/* Action Sheet Modal */}
+			<Modal
+				visible={showActionSheet}
+				transparent={true}
+				animationType="slide"
+				onRequestClose={closeActionSheet}
+			>
+				<TouchableOpacity
+					className='flex-1 bg-gray-800/50 justify-end'
+					activeOpacity={1}
+					onPress={closeActionSheet}
+				>
+					<View className='bg-white rounded-t-3xl p-6'>
+						{selectedRecipe && (
+							<View className='mb-4'>
+								<Text className='text-lg font-bold text-gray-800 mb-1'>
+									{selectedRecipe.title}
+								</Text>
+								{selectedRecipe.description && (
+									<Text className='text-gray-500 text-sm' numberOfLines={2}>
+										{selectedRecipe.description}
+									</Text>
+								)}
+							</View>
+						)}
+
+						<View className='flex-col gap-3'>
+							<TouchableOpacity
+								className='flex-row items-center p-4 bg-blue-50 rounded-xl'
+								onPress={handleViewRecipe}
+							>
+								<View className='w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-3'>
+									<Ionicons name='eye-outline' size={20} color='white' />
+								</View>
+								<View className='flex-1'>
+									<Text className='font-semibold text-blue-800'>View Recipe</Text>
+									<Text className='text-blue-600 text-sm'>See full recipe details</Text>
+								</View>
+								<Ionicons name='chevron-forward' size={20} color='#3B82F6' />
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								className='flex-row items-center p-4 bg-orange-50 rounded-xl'
+								onPress={handleAddToCollection}
+							>
+								<View className='w-10 h-10 bg-orange-500 rounded-full items-center justify-center mr-3'>
+									<Ionicons name='library-outline' size={20} color='white' />
+								</View>
+								<View className='flex-1'>
+									<Text className='font-semibold text-orange-800'>Add to Collection</Text>
+									<Text className='text-orange-600 text-sm'>Organize in your collections</Text>
+								</View>
+								<Ionicons name='chevron-forward' size={20} color='#F97316' />
+							</TouchableOpacity>
+						</View>
+
+						<TouchableOpacity
+							className='mt-4 p-3 items-center'
+							onPress={closeActionSheet}
+						>
+							<Text className='text-gray-500 font-medium'>Cancel</Text>
+						</TouchableOpacity>
+					</View>
+				</TouchableOpacity>
+			</Modal>
+
+			{/* Collection Picker Modal */}
+			<CollectionPickerModal
+				visible={showCollectionPicker}
+				recipe={selectedRecipe}
+				onClose={closeCollectionPicker}
+				onSuccess={() => {
+					// Optionally refresh data or show success message
+				}}
+			/>
 		</View>
 	);
 };

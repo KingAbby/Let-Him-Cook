@@ -191,7 +191,7 @@ const RecipeDetailScreen = () => {
 					{/* Instructions Section */}
 					<View className='mb-4'>
 						{spoonacularInstructions.length > 0 &&
-						spoonacularInstructions[0]?.steps?.length > 0 ? (
+							spoonacularInstructions[0]?.steps?.length > 0 ? (
 							<InstructionsList
 								steps={spoonacularInstructions[0].steps}
 								isSpoonacular={true}
@@ -229,7 +229,8 @@ const RecipeDetailScreen = () => {
 				</TouchableOpacity>
 			</View>
 		);
-	} // Render different content based on whether it's a Spoonacular recipe or a database recipe
+	}
+	
 	return (
 		<View className='flex-1 bg-gray-50'>
 			<StatusBar
@@ -240,6 +241,7 @@ const RecipeDetailScreen = () => {
 			<Header
 				title={isSpoonacularRecipe ? "Recipe Details" : "My Recipe Details"}
 				showBackButton={true}
+				showBookmark={false}
 			/>
 			{isSpoonacularRecipe ? (
 				// Render Spoonacular recipe content
