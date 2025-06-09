@@ -11,7 +11,7 @@ import {
 	Platform,
 	Modal,
 } from "react-native";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, useRoute, RouteProp } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,8 +26,12 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type RootStackParamList = {
 	[ROUTES.RECIPE_DETAIL]: { recipeId: string };
 	[ROUTES.ADD_RECIPE_NOTES]: undefined;
+	[ROUTES.NOTES]: { fromCollection?: boolean };
 	MainApp: { screen: string };
 };
+
+// Type for route
+type NotesRouteProp = RouteProp<RootStackParamList, typeof ROUTES.NOTES>;
 
 // Type for navigation
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -49,7 +53,14 @@ const HEADER_HEIGHT =
 
 const NotesScreen = () => {
 	const navigation = useNavigation<NavigationProp>();
+	const route = useRoute();
 	const { user } = useAuth();
+
+	// Check if screen is accessed from a collection
+	const fromCollection = route.params ? (route.params as any).fromCollection : false;
+
+	// Log untuk debugging
+	console.log("Route params:", route.params);
 
 	const [recipes, setRecipes] = useState<Recipe[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -131,6 +142,75 @@ const NotesScreen = () => {
 		}
 	};
 
+	// Handle delete recipe
+	const handleDeleteRecipe = async () => {
+		if (!selectedRecipe) return;
+
+		try {
+			setShowActionSheet(false);
+
+			// Show confirmation alert before deletion
+			Alert.alert(
+				"Delete Recipe",
+				`Are you sure you want to delete "${selectedRecipe.title}"?`,
+				[
+					{
+						text: "Cancel",
+						style: "cancel",
+					},
+					{
+						text: "Delete",
+						style: "destructive",
+						onPress: async () => {
+							try {
+								// Delete recipe from database
+								const { error } = await supabase
+									.from("myrecipes")
+									.delete()
+									.eq("id", selectedRecipe.id);
+
+								// Check for foreign key constraint error (recipe is in a collection)
+								if (error) {
+									// Check if it's a foreign key constraint error
+									if (error.code === "23503" && error.message.includes("collection_recipes")) {
+										Alert.alert(
+											"Cannot Delete Recipe",
+											"This recipe is currently in one or more collections. Please remove it from all collections first before deleting it.",
+											[
+												{
+													text: "OK",
+													style: "default",
+												}
+											]
+										);
+										return;
+									}
+									throw error;
+								}
+
+								// Update local state to remove the deleted recipe
+								const updatedRecipes = recipes.filter(
+									(recipe) => recipe.id !== selectedRecipe.id
+								);
+								setRecipes(updatedRecipes);
+								setFilteredRecipes(updatedRecipes);
+
+								// Show success message
+								Alert.alert("Success", "Recipe deleted successfully");
+							} catch (error) {
+								console.error("Error deleting recipe:", error);
+								Alert.alert("Error", "Failed to delete recipe");
+							}
+						},
+					},
+				]
+			);
+		} catch (error) {
+			console.error("Error in delete process:", error);
+			Alert.alert("Error", "Something went wrong");
+		}
+	};
+
 	// Close action sheet
 	const closeActionSheet = () => {
 		setShowActionSheet(false);
@@ -163,7 +243,24 @@ const NotesScreen = () => {
 		/>
 	);
 
-	// Empty state component
+	// Empty state when no recipes found during search
+	const renderNoSearchResults = () => (
+		<View className='flex-1 justify-center items-center px-6 py-12'>
+			<View className="items-center">
+				<View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+					<Ionicons name="search-outline" size={40} color="#9CA3AF" />
+				</View>
+				<Text className="text-xl font-bold text-gray-800 mb-2 text-center">
+					No Recipes Found
+				</Text>
+				<Text className="text-gray-500 text-center leading-5">
+					No recipes match your search for "{searchQuery}"
+				</Text>
+			</View>
+		</View>
+	);
+
+	// Empty state component when no recipes exist
 	const renderEmptyState = () => (
 		<View className='flex-1 justify-center items-center px-6 py-12'>
 			<Ionicons
@@ -198,7 +295,7 @@ const NotesScreen = () => {
 			{/* Header positioned absolutely so it stays fixed at the top */}
 			<Header
 				title='My Recipe Notes'
-				showBackButton={false}
+				showBackButton={fromCollection}
 				showBookmark={false}
 			/>
 
@@ -253,7 +350,9 @@ const NotesScreen = () => {
 							progressViewOffset={HEADER_HEIGHT + 60}
 						/>
 					}
-					ListEmptyComponent={renderEmptyState}
+					ListEmptyComponent={
+						recipes.length === 0 ? renderEmptyState : renderNoSearchResults
+					}
 				/>
 			)}
 			{/* Floating Action Button - Only show when there are recipes */}
@@ -330,6 +429,20 @@ const NotesScreen = () => {
 									<Text className='text-orange-600 text-sm'>Organize in your collections</Text>
 								</View>
 								<Ionicons name='chevron-forward' size={20} color='#F97316' />
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								className='flex-row items-center p-4 bg-red-50 rounded-xl'
+								onPress={handleDeleteRecipe}
+							>
+								<View className='w-10 h-10 bg-red-500 rounded-full items-center justify-center mr-3'>
+									<Ionicons name='trash-outline' size={20} color='white' />
+								</View>
+								<View className='flex-1'>
+									<Text className='font-semibold text-red-800'>Delete Recipe</Text>
+									<Text className='text-red-600 text-sm'>Remove this recipe permanently</Text>
+								</View>
+								<Ionicons name='chevron-forward' size={20} color='#EF4444' />
 							</TouchableOpacity>
 						</View>
 

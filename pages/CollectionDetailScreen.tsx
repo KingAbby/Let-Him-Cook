@@ -123,7 +123,7 @@ const CollectionDetailScreen = ({ route, navigation }) => {
             </Text>
             <TouchableOpacity
                 className="bg-blue-500 px-6 py-3 rounded-xl"
-                onPress={() => navigation.navigate(ROUTES.NOTES)}
+                onPress={() => navigation.navigate(ROUTES.NOTES, { fromCollection: true })}
             >
                 <Text className="text-white font-semibold">Browse Recipes</Text>
             </TouchableOpacity>
@@ -228,7 +228,7 @@ const CollectionDetailScreen = ({ route, navigation }) => {
                 rightIcon={
                     <Ionicons name="add" size={24} color="#3b82f6" />
                 }
-                onRightIconPress={() => navigation.navigate(ROUTES.NOTES)}
+                onRightIconPress={() => navigation.navigate(ROUTES.NOTES, { fromCollection: true })}
             />
 
             {/* Collection Stats */}
