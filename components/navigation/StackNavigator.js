@@ -10,6 +10,9 @@ import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 import BookmarksScreen from "../../pages/BookMarksScreen";
+import MyCollectionScreen from "../../pages/MyCollectionScreen";
+import CreateCollectionScreen from "../../pages/CreateCollectionScreen";
+import CollectionDetailScreen from "../../pages/CollectionDetailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -64,6 +67,22 @@ const StackNavigator = () => {
 			<Stack.Screen
 				name={ROUTES.BOOKMARKS}
 				component={BookmarksScreen}
+			/>			{/* My Collection */}
+			<Stack.Screen
+				name={ROUTES.MY_COLLECTION}
+				component={MyCollectionScreen}
+			/>
+
+			{/* Create Collection */}
+			<Stack.Screen
+				name={ROUTES.CREATE_COLLECTION}
+				component={CreateCollectionScreen}
+			/>
+
+			{/* Collection Detail */}
+			<Stack.Screen
+				name={ROUTES.COLLECTION_DETAIL}
+				component={CollectionDetailScreen}
 			/>
 		</Stack.Navigator>
 	);
