@@ -39,7 +39,7 @@ const InstructionsList: React.FC<InstructionsListProps> = ({
 					key={index}
 					className='mb-4 bg-white p-4 rounded-lg'
 				>
-					<View className='flex-row mb-2'>
+					<View className='flex-row items-center gap-2'>
 						<View className='w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-2'>
 							<Text className='text-blue-600 font-bold'>
 								{isSpoonacular

@@ -85,7 +85,8 @@ export const CategoryInput: React.FC<CategoryInputProps> = ({ label, value, onCh
       >
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-3xl min-h-[70%]">
-            {/* Enhanced Header with blue theme */}
+            
+            {/* Header */}
             <View className="bg-blue-500 rounded-t-3xl">
               <View className="flex-row justify-between items-center p-4">
                 <View className="flex-row gap-4 items-center">
@@ -112,7 +113,7 @@ export const CategoryInput: React.FC<CategoryInputProps> = ({ label, value, onCh
                 </TouchableOpacity>
               </View>
             </View>
-            {/* Enhanced Category List */}
+            {/* Category List */}
             <ScrollView className="flex-1 px-4 py-4">
               {CATEGORIES.map((category, index) => (
                 <TouchableOpacity

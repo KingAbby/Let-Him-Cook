@@ -104,7 +104,6 @@ const SearchBarTW: React.FC<SearchBarProps> = ({
 				onSubmitEditing={handleSubmitSearch}
 				returnKeyType='search'
 				autoFocus={autoFocus}
-				clearButtonMode='while-editing'
 				style={{
 					fontSize: getResponsiveSize(14, 16),
 					paddingVertical: getResponsiveSize(1, 2),

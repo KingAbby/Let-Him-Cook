@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, StatusBar, Platform } from "react-native";
+import * as FileSystem from 'expo-file-system';
+import { useNavigation } from "@react-navigation/native";
 
 import Header, { HEADER_HEIGHTS } from "../components/Header";
 import { ImageUploader } from "../components/notesScreen/ImageUploader";
@@ -42,6 +44,7 @@ interface ValidationErrors {
 const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const AddRecipeNotes = () => {
+  const navigation = useNavigation();
   const { user } = useAuth();
 
   // State untuk form
@@ -148,32 +151,52 @@ const AddRecipeNotes = () => {
 
   const uploadImageToSupabase = async (uri: string): Promise<string> => {
     try {
-      // Convert image to blob
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      console.log('Starting image upload process...');
+      console.log('Image URI:', uri);
+
+      // Baca file sebagai base64
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      console.log('Base64 read successfully, length:', base64.length);
+
+      // Convert base64 to ArrayBuffer
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
 
       // Generate unique filename
       const fileName = `recipe_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
 
+      console.log('Uploading to Supabase with filename:', fileName);
+
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('recipe-images')
-        .upload(fileName, blob, {
+        .upload(fileName, byteArray, {
           contentType: 'image/jpeg',
           upsert: false
         });
 
       if (error) {
-        console.error('Error uploading image:', error);
+        console.error('Supabase upload error:', error);
         throw error;
       }
+
+      console.log('Upload successful:', data);
 
       // Get public URL
       const { data: urlData } = supabase.storage
         .from('recipe-images')
         .getPublicUrl(fileName);
 
+      console.log('Public URL generated:', urlData.publicUrl);
       return urlData.publicUrl;
+
     } catch (error) {
       console.error('Error in uploadImageToSupabase:', error);
       throw error;
@@ -194,15 +217,34 @@ const AddRecipeNotes = () => {
     setSaving(true);
 
     try {
+      console.log('Starting save recipe process...');
+
+      // Validate image URI
+      if (!imageUri || !imageUri.trim()) {
+        throw new Error('No image selected');
+      }
+
+      // Check if file exists
+      const fileInfo = await FileSystem.getInfoAsync(imageUri);
+      if (!fileInfo.exists) {
+        throw new Error('Selected image file does not exist');
+      }
+
+      console.log('Image file validated, starting upload...');
+
       // Upload image first
       const imageUrl = await uploadImageToSupabase(imageUri);
 
+      console.log('Image uploaded successfully:', imageUrl);
+
+      // Rest of your saveRecipe logic...
       // Filter out empty ingredients and steps
       const validIngredients = ingredients.filter(
         ing => ing.amount.trim() && ing.unit.trim() && ing.name.trim()
       );
 
       const validSteps = cookingSteps.filter(step => step.description.trim());
+
       // Prepare recipe data
       const recipeData = {
         user_id: user.id,
@@ -228,9 +270,6 @@ const AddRecipeNotes = () => {
 
       if (error) {
         console.error('Supabase error details:', error);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error.details);
-        console.error('Error hint:', error.hint);
         throw new Error(`Database error: ${error.message || 'Unknown error'}`);
       }
 
@@ -248,10 +287,33 @@ const AddRecipeNotes = () => {
       setCookingSteps([{ id: '1', step: 1, description: '' }]);
       setErrors({});
 
-      Alert.alert('Success', 'Your recipe has been saved successfully!');
+      // Show success alert and navigate back when user clicks OK
+      Alert.alert(
+        'Success',
+        'Your recipe has been saved successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+
     } catch (error: any) {
       console.error('Error saving recipe:', error);
-      Alert.alert('Error', error.message || 'Failed to save recipe. Please try again.');
+
+      // Provide more specific error messages
+      let errorMessage = 'Failed to save recipe. Please try again.';
+
+      if (error.message.includes('image') || error.message.includes('upload')) {
+        errorMessage = 'Failed to upload image. Please check your internet connection and try again.';
+      } else if (error.message.includes('Database')) {
+        errorMessage = 'Failed to save recipe to database. Please try again.';
+      } else if (error.message.includes('exist')) {
+        errorMessage = 'Selected image file is not valid. Please select another image.';
+      }
+
+      Alert.alert('Error', errorMessage);
     } finally {
       setSaving(false);
     }
