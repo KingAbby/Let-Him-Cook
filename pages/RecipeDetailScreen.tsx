@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { supabase } from "../utils/supabase";
-import { Ionicons } from "@expo/vector-icons";
 import Header, { HEADER_HEIGHTS } from "../components/Header";
 import {
 	getRecipeIngredients,
@@ -20,6 +19,10 @@ import {
 	Ingredient as SpoonacularIngredient,
 	Instruction,
 } from "../services/SpoonacularService";
+import RecipeHeader from "../components/recipe/RecipeHeader";
+import RecipeMeta from "../components/recipe/RecipeMeta";
+import IngredientsList from "../components/recipe/IngredientsList";
+import InstructionsList from "../components/recipe/InstructionsList";
 
 interface RouteParams {
 	recipeId?: string;
@@ -53,7 +56,8 @@ interface Recipe {
 	created_at: string | null;
 }
 
-const HEADER_HEIGHT = Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
+const HEADER_HEIGHT =
+	Platform.OS === "android" ? HEADER_HEIGHTS.android : HEADER_HEIGHTS.ios;
 
 const RecipeDetailScreen = () => {
 	const navigation = useNavigation();
@@ -62,8 +66,12 @@ const RecipeDetailScreen = () => {
 
 	const [recipe, setRecipe] = useState<Recipe | null>(null);
 	const [spoonacularRecipe, setSpoonacularRecipe] = useState<any | null>(null);
-	const [spoonacularIngredients, setSpoonacularIngredients] = useState<SpoonacularIngredient[]>([]);
-	const [spoonacularInstructions, setSpoonacularInstructions] = useState<Instruction[]>([]);
+	const [spoonacularIngredients, setSpoonacularIngredients] = useState<
+		SpoonacularIngredient[]
+	>([]);
+	const [spoonacularInstructions, setSpoonacularInstructions] = useState<
+		Instruction[]
+	>([]);
 	const [loading, setLoading] = useState(true);
 	const [isSpoonacularRecipe, setIsSpoonacularRecipe] = useState(false);
 	useEffect(() => {
@@ -138,9 +146,7 @@ const RecipeDetailScreen = () => {
 			month: "long",
 			day: "numeric",
 		});
-	};
-
-	// Render Spoonacular recipe content
+	}; // Render Spoonacular recipe content
 	const renderSpoonacularContent = () => {
 		if (!spoonacularRecipe) return null;
 
@@ -150,95 +156,31 @@ const RecipeDetailScreen = () => {
 				contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingBottom: 30 }}
 				showsVerticalScrollIndicator={false}
 			>
-				{/* Recipe Image */}
-				<View className='w-full h-64 bg-gray-200'>
-					{spoonacularRecipe.image ? (
-						<Image
-							source={{ uri: spoonacularRecipe.image }}
-							className='w-full h-full'
-							resizeMode='cover'
-						/>
-					) : (
-						<View className='w-full h-full items-center justify-center'>
-							<Ionicons
-								name='image-outline'
-								size={48}
-								color='#9CA3AF'
-							/>
-						</View>
-					)}
-				</View>
+				{/* Recipe Header with Image and Title */}
+				<RecipeHeader
+					title={spoonacularRecipe.title}
+					imageUrl={spoonacularRecipe.image}
+				/>
 
-				{/* Recipe Info */}
-				<View className='p-4'>
-					<Text className='text-2xl font-bold text-gray-800 mb-2'>
-						{spoonacularRecipe.title}
-					</Text>
-
-					{/* Recipe Meta */}
-					<View className='flex-row flex-wrap mb-6 mt-2'>
-						<View className='flex-row items-center mr-6 mb-2'>
-							<Ionicons
-								name='time-outline'
-								size={20}
-								color='#6B7280'
-							/>
-							<Text className='text-gray-600 ml-1'>
-								{spoonacularRecipe.readyInMinutes
-									? `${spoonacularRecipe.readyInMinutes} min total`
-									: "No time info"}
-							</Text>
-						</View>
-
-						<View className='flex-row items-center mr-6 mb-2'>
-							<Ionicons
-								name='people-outline'
-								size={20}
-								color='#6B7280'
-							/>
-							<Text className='text-gray-600 ml-1'>
-								{spoonacularRecipe.servings
-									? `${spoonacularRecipe.servings} servings`
-									: "Servings unknown"}
-							</Text>
-						</View>
-					</View>
+				<View className='px-4'>
+					{/* Recipe Meta Information */}
+					<RecipeMeta
+						prepTime={spoonacularRecipe.preparationMinutes}
+						cookTime={spoonacularRecipe.cookingMinutes}
+						servings={
+							spoonacularRecipe.servings
+								? `${spoonacularRecipe.servings} servings`
+								: null
+						}
+					/>
 
 					{/* Ingredients Section */}
 					<View className='mb-6'>
-						<View className='flex-row items-center mb-4'>
-							<Ionicons
-								name='list-outline'
-								size={22}
-								color='#4B5563'
+						{spoonacularIngredients && spoonacularIngredients.length > 0 ? (
+							<IngredientsList
+								ingredients={spoonacularIngredients}
+								isSpoonacular={true}
 							/>
-							<Text className='text-xl font-bold text-gray-700 ml-2'>
-								Ingredients
-							</Text>
-						</View>
-
-						{spoonacularIngredients.length > 0 ? (
-							spoonacularIngredients.map((ingredient, index) => (
-								<View
-									key={index}
-									className='flex-row items-center mb-2 bg-white p-3 rounded-lg'
-								>
-									<View className='w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-3'>
-										<Text className='text-blue-600 font-bold'>{index + 1}</Text>
-									</View>
-									<View className='flex-1'>
-										<Text className='text-gray-700 font-medium capitalize'>
-											{ingredient.name}
-										</Text>
-										<Text className='text-gray-500 text-sm'>
-											{ingredient.amount.us.value} {ingredient.amount.us.unit}
-											{ingredient.amount.us.unit ? "" : " "}(
-											{ingredient.amount.metric.value}
-											{ingredient.amount.metric.unit})
-										</Text>
-									</View>
-								</View>
-							))
 						) : (
 							<Text className='text-gray-500'>
 								No ingredients information available
@@ -248,46 +190,12 @@ const RecipeDetailScreen = () => {
 
 					{/* Instructions Section */}
 					<View className='mb-4'>
-						<View className='flex-row items-center mb-4'>
-							<Ionicons
-								name='document-text-outline'
-								size={22}
-								color='#4B5563'
-							/>
-							<Text className='text-xl font-bold text-gray-700 ml-2'>
-								Instructions
-							</Text>
-						</View>
-
 						{spoonacularInstructions.length > 0 &&
 						spoonacularInstructions[0]?.steps?.length > 0 ? (
-							spoonacularInstructions[0].steps.map((step) => (
-								<View
-									key={step.number}
-									className='mb-4 bg-white p-4 rounded-lg'
-								>
-									<View className='flex-row mb-2'>
-										<View className='w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-2'>
-											<Text className='text-blue-600 font-bold'>
-												{step.number}
-											</Text>
-										</View>
-										<Text className='text-gray-700 flex-1'>{step.step}</Text>
-									</View>
-
-									{/* Equipment list if available */}
-									{step.equipment && step.equipment.length > 0 && (
-										<View className='ml-10 mt-2'>
-											<Text className='text-gray-600 font-medium mb-1'>
-												Equipment:
-											</Text>
-											<Text className='text-gray-500'>
-												{step.equipment.map((e) => e.name).join(", ")}
-											</Text>
-										</View>
-									)}
-								</View>
-							))
+							<InstructionsList
+								steps={spoonacularInstructions[0].steps}
+								isSpoonacular={true}
+							/>
 						) : (
 							<Text className='text-gray-500'>No instructions available</Text>
 						)}
@@ -346,141 +254,47 @@ const RecipeDetailScreen = () => {
 					}}
 					showsVerticalScrollIndicator={false}
 				>
-					{/* Recipe Image */}
-					{recipe?.image_url ? (
-						<Image
-							source={{ uri: recipe.image_url }}
-							className='w-full h-48'
-							resizeMode='cover'
+					{/* Recipe Header with Image and Title */}
+					<RecipeHeader
+						title={recipe.title}
+						description={recipe.description}
+						imageUrl={recipe.image_url}
+					/>
+
+					{/* Recipe Meta Information */}
+					<View className='px-4'>
+						<RecipeMeta
+							prepTime={recipe.prep_time}
+							cookTime={recipe.cook_time}
+							servings={recipe.servings}
+							category={recipe.category}
 						/>
-					) : (
-						<View className='w-full h-48 bg-gray-200 items-center justify-center'>
-							<Ionicons
-								name='image-outline'
-								size={48}
-								color='#9CA3AF'
-							/>
-						</View>
-					)}
-					{/* Recipe Info */}
-					<View className='p-4'>
-						<Text className='text-2xl font-bold text-gray-800 mb-2'>
-							{recipe.title}
-						</Text>
-
-						{recipe.description && (
-							<Text className='text-gray-600 mb-4'>{recipe.description}</Text>
-						)}
-
-						{/* Recipe Meta */}
-						<View className='flex-row flex-wrap mb-6 mt-2'>
-							<View className='flex-row items-center mr-6 mb-2'>
-								<Ionicons
-									name='time-outline'
-									size={20}
-									color='#6B7280'
-								/>
-								<Text className='text-gray-600 ml-1'>
-									{recipe.prep_time
-										? `${recipe.prep_time} min prep`
-										: "No prep time"}
-								</Text>
-							</View>
-
-							<View className='flex-row items-center mr-6 mb-2'>
-								<Ionicons
-									name='flame-outline'
-									size={20}
-									color='#6B7280'
-								/>
-								<Text className='text-gray-600 ml-1'>
-									{recipe.cook_time
-										? `${recipe.cook_time} min cook`
-										: "No cook time"}
-								</Text>
-							</View>
-
-							<View className='flex-row items-center mr-6 mb-2'>
-								<Ionicons
-									name='people-outline'
-									size={20}
-									color='#6B7280'
-								/>
-								<Text className='text-gray-600 ml-1'>
-									{recipe.servings || "N/A"}
-								</Text>
-							</View>
-
-							{recipe.category && (
-								<View className='bg-blue-100 px-3 py-1 rounded-full mb-2'>
-									<Text className='text-blue-800'>{recipe.category}</Text>
-								</View>
-							)}
-						</View>
 					</View>
+
 					{/* Ingredients */}
 					<View className='mx-4 mb-6'>
-						<Text className='text-xl font-bold text-gray-800 mb-3'>
-							Ingredients
-						</Text>
-
-						<View className='bg-white rounded-xl p-4 shadow-sm'>
-							{recipe.ingredients && recipe.ingredients.length > 0 ? (
-								recipe.ingredients.map((ingredient, index) => (
-									<View
-										key={ingredient.id || index}
-										className={`flex-row py-2 ${
-											index < recipe.ingredients!.length - 1
-												? "border-b border-gray-100"
-												: ""
-										}`}
-									>
-										<View className='w-2 h-2 rounded-full bg-blue-500 mt-2 mr-2' />
-										<Text className='text-gray-700'>
-											<Text className='font-medium'>
-												{ingredient.amount} {ingredient.unit}
-											</Text>
-											{ingredient.name}
-										</Text>
-									</View>
-								))
-							) : (
-								<Text className='text-gray-500'>No ingredients listed</Text>
-							)}
-						</View>
+						{recipe.ingredients && recipe.ingredients.length > 0 ? (
+							<IngredientsList
+								ingredients={recipe.ingredients}
+								isSpoonacular={false}
+							/>
+						) : (
+							<Text className='text-gray-500'>No ingredients listed</Text>
+						)}
 					</View>
-					{/* Cooking Steps */}
+
+					{/* Cooking Steps/Instructions */}
 					<View className='mx-4 mb-6'>
-						<Text className='text-xl font-bold text-gray-800 mb-3'>
-							Cooking Steps
-						</Text>
-
-						<View className='bg-white rounded-xl p-4 shadow-sm'>
-							{recipe.cooking_steps && recipe.cooking_steps.length > 0 ? (
-								recipe.cooking_steps.map((step, index) => (
-									<View
-										key={step.id || index}
-										className={`flex-row py-3 ${
-											index < recipe.cooking_steps!.length - 1
-												? "border-b border-gray-100"
-												: ""
-										}`}
-									>
-										<View className='bg-blue-500 w-6 h-6 rounded-full items-center justify-center mr-3'>
-											<Text className='text-white font-medium'>
-												{step.step}
-											</Text>
-										</View>
-										<Text className='text-gray-700 flex-1'>
-											{step.description}
-										</Text>
-									</View>
-								))
-							) : (
-								<Text className='text-gray-500'>No cooking steps provided</Text>
-							)}
-						</View>
+						{recipe.cooking_steps && recipe.cooking_steps.length > 0 ? (
+							<InstructionsList
+								steps={recipe.cooking_steps}
+								isSpoonacular={false}
+							/>
+						) : (
+							<Text className='text-gray-500'>No instructions provided</Text>
+						)}
 					</View>
+
 					{/* Created Date */}
 					<View className='mx-4 mb-6'>
 						<Text className='text-sm text-gray-500'>

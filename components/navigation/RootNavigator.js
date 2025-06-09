@@ -9,7 +9,6 @@ import OnboardingScreen from "../../pages/OnboardingScreen";
 import { ActivityIndicator, View } from "react-native";
 import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
-import MyRecipeDetailScreen from "../../pages/MyRecipeDetailScreen";
 import AddRecipeNotes from "../../pages/AddRecipeNotes";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 import BookmarksScreen from "../../pages/BookMarksScreen";
@@ -51,13 +50,14 @@ const RootNavigator = () => {
 			setOnboardingCompleted(null);
 			setCheckingOnboarding(false);
 		}
-	}, [user]); const checkOnboardingStatus = async () => {
+	}, [user]);
+	const checkOnboardingStatus = async () => {
 		setCheckingOnboarding(true);
 		try {
 			const completed = await OnboardingService.isOnboardingCompleted(user?.id);
 			setOnboardingCompleted(completed);
 		} catch (error) {
-			console.error('Error checking onboarding status:', error);
+			console.error("Error checking onboarding status:", error);
 			// Default to not completed on error
 			setOnboardingCompleted(false);
 		} finally {
@@ -71,7 +71,7 @@ const RootNavigator = () => {
 			await OnboardingService.markNotFirstTime();
 			setOnboardingCompleted(true);
 		} catch (error) {
-			console.error('Error completing onboarding:', error);
+			console.error("Error completing onboarding:", error);
 		}
 	};
 
@@ -85,7 +85,7 @@ const RootNavigator = () => {
 			</View>
 		);
 	}
-	
+
 	return (
 		<RootStack.Navigator screenOptions={{ headerShown: false }}>
 			{user ? (
@@ -112,10 +112,6 @@ const RootNavigator = () => {
 						<RootStack.Screen
 							name={ROUTES.ADD_RECIPE_NOTES}
 							component={AddRecipeNotes}
-						/>
-						<RootStack.Screen
-							name={ROUTES.MY_RECIPE_DETAIL}
-							component={MyRecipeDetailScreen}
 						/>
 						<RootStack.Screen
 							name={ROUTES.MY_RECIPES}

@@ -60,10 +60,6 @@ const SearchBarTW: React.FC<SearchBarProps> = ({
 
 	// Calculate responsive sizes based on screen width
 	const getResponsiveSize = (smallSize: number, largeSize: number): number => {
-		// Base calculation on screen width
-		// For smaller devices (< 375px) use smallSize
-		// For larger devices (> 768px) use largeSize
-		// Otherwise scale proportionally between the two
 		if (screenWidth < 375) return smallSize;
 		if (screenWidth > 768) return largeSize;
 
@@ -79,7 +75,7 @@ const SearchBarTW: React.FC<SearchBarProps> = ({
 	const horizontalPadding = getResponsiveSize(12, 20);
 	return (
 		<View
-			className={`flex-row items-center bg-white rounded-full shadow-sm ${
+			className={`flex-row items-center bg-white rounded-full shadow-sm border-hairline border-blue-500 ${
 				isFocused ? "shadow-md" : ""
 			} ${containerClassName || ""}`}
 			style={{
@@ -110,8 +106,8 @@ const SearchBarTW: React.FC<SearchBarProps> = ({
 				autoFocus={autoFocus}
 				clearButtonMode='while-editing'
 				style={{
-					fontSize: getResponsiveSize(14, 16), // Slightly reduced font size
-					paddingVertical: getResponsiveSize(1, 2), // Reduced from 2,4 to 1,2
+					fontSize: getResponsiveSize(14, 16),
+					paddingVertical: getResponsiveSize(1, 2),
 				}}
 			/>
 			{value.length > 0 && (

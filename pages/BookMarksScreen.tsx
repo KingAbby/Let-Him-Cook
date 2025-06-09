@@ -3,22 +3,19 @@ import {
 	View,
 	Text,
 	ScrollView,
-	StyleSheet,
 	ActivityIndicator,
 	Platform,
 	StatusBar,
-	TouchableOpacity,
 	Dimensions,
 	RefreshControl,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
 import Header, { HEADER_HEIGHTS } from "../components/Header";
 import { BookmarkService, BookmarkedRecipe } from "../services/BookmarkService";
 import { bookmarkEventService } from "../services/BookmarkEventService";
 import { useAuth } from "../context/AuthContext";
-import RecipeCard from "../components/RecipeCard";
+import RecipeCard from "../components/recipe/RecipeCard";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -109,7 +106,7 @@ const BookmarksScreen = () => {
 				item={recipe}
 				width={CARD_WIDTH}
 				height={200}
-				isBookmarked={true} // Always true in bookmarks screen
+				isBookmarked={true}
 				isBookmarkLoading={isRemoveLoading}
 				onToggleBookmark={removeBookmark}
 				onPress={(recipe) => {
@@ -126,7 +123,7 @@ const BookmarksScreen = () => {
 			rows.push(
 				<View
 					key={i}
-					style={styles.row}
+					className='flex-row justify-between mb-4'
 				>
 					{renderBookmarkCard(bookmarks[i], i)}
 					{bookmarks[i + 1] && renderBookmarkCard(bookmarks[i + 1], i + 1)}
@@ -135,11 +132,9 @@ const BookmarksScreen = () => {
 		}
 		return rows;
 	};
-
-	// ...rest of existing code...
 	if (!user) {
 		return (
-			<View style={styles.container}>
+			<View className='flex-1 bg-gray-50'>
 				<StatusBar
 					translucent
 					backgroundColor='transparent'
@@ -149,8 +144,11 @@ const BookmarksScreen = () => {
 					title='Your Favorite Recipes'
 					showBackButton={true}
 				/>
-				<View style={[styles.centerContainer, { paddingTop: headerHeight }]}>
-					<Text style={styles.loginText}>
+				<View
+					className='flex-1 justify-center items-center px-5'
+					style={{ paddingTop: headerHeight }}
+				>
+					<Text className='text-base text-gray-500 text-center'>
 						Please login to view your bookmarks
 					</Text>
 				</View>
@@ -182,6 +180,9 @@ const BookmarksScreen = () => {
 					<RefreshControl
 						refreshing={refreshing}
 						onRefresh={onRefresh}
+						colors={["#3b82f6"]}
+						tintColor={"#3b82f6"}
+						progressViewOffset={headerHeight}
 					/>
 				}
 			>
@@ -218,28 +219,5 @@ const BookmarksScreen = () => {
 		</View>
 	);
 };
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#f9fafb",
-	},
-	centerContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-		paddingHorizontal: 20,
-	},
-	loginText: {
-		fontSize: 16,
-		color: "#6b7280",
-		textAlign: "center",
-	},
-	row: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		marginBottom: 16,
-	},
-});
 
 export default BookmarksScreen;
