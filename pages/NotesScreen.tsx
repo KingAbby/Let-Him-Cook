@@ -67,9 +67,6 @@ const NotesScreen = () => {
 		? (route.params as any).fromCollection
 		: false;
 
-	// Log untuk debugging
-	console.log("Route params:", route.params);
-
 	const [recipes, setRecipes] = useState<Recipe[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
@@ -95,7 +92,6 @@ const NotesScreen = () => {
 			setRecipes(data || []);
 			setFilteredRecipes(data || []);
 		} catch (error) {
-			console.error("Error fetching recipes:", error);
 			Alert.alert("Error", "Failed to load recipes");
 		} finally {
 			setLoading(false);
@@ -218,7 +214,6 @@ const NotesScreen = () => {
 								// Show success message
 								Alert.alert("Success", "Recipe deleted successfully");
 							} catch (error) {
-								console.error("Error deleting recipe:", error);
 								Alert.alert("Error", "Failed to delete recipe");
 							}
 						},
@@ -226,7 +221,6 @@ const NotesScreen = () => {
 				]
 			);
 		} catch (error) {
-			console.error("Error in delete process:", error);
 			Alert.alert("Error", "Something went wrong");
 		}
 	};
@@ -339,7 +333,7 @@ const NotesScreen = () => {
 						value={searchQuery}
 						onChangeText={handleSearch}
 						placeholder='Search recipes...'
-						containerClassName='border border-gray-200'
+						containerClassName='border-hairline border-blue-500'
 					/>
 				</View>
 				<View className='h-2 bg-gradient-to-b from-gray-100 to-transparent' />

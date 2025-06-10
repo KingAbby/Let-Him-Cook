@@ -20,7 +20,11 @@ interface RecipeCardProps {
 	onAddToCollection?: (recipe: Recipe) => void;
 }
 
-const RecipeCard = ({ recipe, onPress, onAddToCollection }: RecipeCardProps) => {
+const RecipeCard = ({
+	recipe,
+	onPress,
+	onAddToCollection,
+}: RecipeCardProps) => {
 	// Format date for display
 	const formatDate = (dateString: string | null) => {
 		if (!dateString) return "";
@@ -103,7 +107,7 @@ const RecipeCard = ({ recipe, onPress, onAddToCollection }: RecipeCardProps) => 
 									color='#9CA3AF'
 								/>
 								<Text className='text-gray-500 text-xs ml-1'>
-									{recipe.servings}
+									{recipe.servings} servings
 								</Text>
 							</View>
 						)}

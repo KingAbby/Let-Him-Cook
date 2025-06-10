@@ -64,7 +64,7 @@ const RecipeMeta: React.FC<RecipeMetaProps> = ({
 			{servings && (
 				<RecipeMetaItem
 					icon='restaurant-outline'
-					text={servings}
+					text={`${servings} servings`}
 				/>
 			)}
 

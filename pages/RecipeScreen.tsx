@@ -108,7 +108,6 @@ const RecipeScreen = ({ navigation }) => {
 				);
 			}
 		} catch (error) {
-			console.error(error);
 			setRecipes([]);
 		} finally {
 			setLoading(false);
@@ -141,7 +140,7 @@ const RecipeScreen = ({ navigation }) => {
 
 			setBookmarkedRecipes(bookmarkedSet);
 		} catch (error) {
-			console.error("Error loading bookmark status:", error);
+			Alert.alert("Error", "Failed to load bookmark status");
 		}
 	};
 
@@ -186,12 +185,11 @@ const RecipeScreen = ({ navigation }) => {
 					? "Recipe removed from favorites"
 					: "Recipe added to favorites";
 
-				console.log(message);
+				Alert.alert("Success", message);
 			} else {
 				Alert.alert("Error", result.error || "Failed to update favorites");
 			}
 		} catch (error) {
-			console.error("Error toggling favorite:", error);
 			Alert.alert("Error", "Failed to update favorite");
 		} finally {
 			setBookmarkLoading((prev) => {
@@ -223,7 +221,6 @@ const RecipeScreen = ({ navigation }) => {
 				setRecipes([]);
 			}
 		} catch (error) {
-			console.error("Error searching recipes:", error);
 			Alert.alert("Error", "Unable to search recipes. Please try again.");
 		} finally {
 			setLoading(false);

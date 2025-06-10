@@ -117,7 +117,6 @@ export const searchRecipes = async (query: string): Promise<Recipe[]> => {
 
         return recipes;
     } catch (error) {
-        console.error('Error fetching recipes:', error);
         return handleApiError<Recipe>(error, "Failed to search for recipes. Please try again later.", true) as Recipe[];
     }
 };
@@ -148,7 +147,6 @@ export const getRandomRecipe = async (): Promise<Recipe> => {
 
         return recipe;
     } catch (error) {
-        console.error('Error fetching random recipe:', error);
         // Create a default empty recipe
         const defaultRecipe: Recipe = {
             id: 0,
@@ -178,7 +176,6 @@ export const getRecipeIngredients = async (recipeId: number): Promise<Ingredient
 
         return response.data.ingredients;
     } catch (error) {
-        console.error(`Error fetching ingredients for recipe ${recipeId}:`, error);
         return handleApiError<Ingredient>(error, "Failed to load recipe ingredients. Please try again later.", true) as Ingredient[];
     }
 }
@@ -193,7 +190,6 @@ export const getRecipeInstructions = async (recipeId: number): Promise<Instructi
 
         return response.data;
     } catch (error) {
-        console.error(`Error fetching instructions for recipe ${recipeId}:`, error);
         return handleApiError<Instruction>(error, "Failed to load recipe instructions. Please try again later.", true) as Instruction[];
     }
 }
