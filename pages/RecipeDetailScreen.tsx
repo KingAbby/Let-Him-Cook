@@ -46,6 +46,7 @@ interface Recipe {
 	id: string;
 	title: string;
 	description: string | null;
+	ready_in_minutes: number | null;
 	prep_time: number | null;
 	cook_time: number | null;
 	servings: string | null;
@@ -135,10 +136,6 @@ const RecipeDetailScreen = () => {
 		}
 	};
 
-	const getTotalTime = () => {
-		const total = (recipe?.prep_time || 0) + (recipe?.cook_time || 0);
-		return total > 0 ? `${total} minutes` : "N/A";
-	};
 	const formatDate = (dateString: string | null) => {
 		if (!dateString) return "N/A";
 		return new Date(dateString).toLocaleDateString("en-US", {
@@ -165,6 +162,7 @@ const RecipeDetailScreen = () => {
 				<View className='px-4'>
 					{/* Recipe Meta Information */}
 					<RecipeMeta
+						readyInMinutes={spoonacularRecipe.readyInMinutes}
 						prepTime={spoonacularRecipe.preparationMinutes}
 						cookTime={spoonacularRecipe.cookingMinutes}
 						servings={
@@ -191,7 +189,7 @@ const RecipeDetailScreen = () => {
 					{/* Instructions Section */}
 					<View className='mb-4'>
 						{spoonacularInstructions.length > 0 &&
-							spoonacularInstructions[0]?.steps?.length > 0 ? (
+						spoonacularInstructions[0]?.steps?.length > 0 ? (
 							<InstructionsList
 								steps={spoonacularInstructions[0].steps}
 								isSpoonacular={true}
@@ -230,7 +228,7 @@ const RecipeDetailScreen = () => {
 			</View>
 		);
 	}
-	
+
 	return (
 		<View className='flex-1 bg-gray-50'>
 			<StatusBar
@@ -266,6 +264,7 @@ const RecipeDetailScreen = () => {
 					{/* Recipe Meta Information */}
 					<View className='px-4'>
 						<RecipeMeta
+							readyInMinutes={recipe.ready_in_minutes}
 							prepTime={recipe.prep_time}
 							cookTime={recipe.cook_time}
 							servings={recipe.servings}

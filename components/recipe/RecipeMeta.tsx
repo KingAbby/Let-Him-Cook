@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 interface RecipeMetaItemProps {
 	icon: keyof typeof Ionicons.glyphMap;
@@ -50,7 +50,7 @@ const RecipeMeta: React.FC<RecipeMetaProps> = ({
 			{prepTime && (
 				<RecipeMetaItem
 					icon='stopwatch-outline'
-					text={`${prepTime} min prep`}
+					text={`${prepTime} min prep `}
 				/>
 			)}
 

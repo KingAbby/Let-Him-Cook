@@ -19,11 +19,11 @@ const RecipeHeader: React.FC<RecipeHeaderProps> = ({
 			{imageUrl ? (
 				<Image
 					source={{ uri: imageUrl }}
-					className='w-full h-64'
+					className='w-full h-80'
 					resizeMode='cover'
 				/>
 			) : (
-				<View className='w-full h-64 bg-gray-200 items-center justify-center'>
+				<View className='w-full h-80 bg-gray-200 items-center justify-center'>
 					<Ionicons
 						name='image-outline'
 						size={48}

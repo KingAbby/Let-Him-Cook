@@ -122,8 +122,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 						>
 							{item.title}
 						</Text>
-						<View className='flex-row items-center justify-center gap-4 space-x-4'>
-							{/* Cooking time */}
+						<View className='flex-row items-center justify-center gap-4 space-x-2'>
+							{/* Total time */}
 							<View className='flex-row items-center'>
 								<Ionicons
 									name='time-outline'
@@ -131,7 +131,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 									color='#e5e7eb'
 								/>
 								<Text className='text-gray-300 text-xs font-bold ml-1'>
-									{item.readyInMinutes || 30} mins
+									{item.readyInMinutes} min
 								</Text>
 							</View>
 
@@ -143,7 +143,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 									color='#e5e7eb'
 								/>
 								<Text className='text-gray-300 text-xs font-bold ml-1'>
-									{item.servings || 4} servings
+									{item.servings} servings
 								</Text>
 							</View>
 						</View>

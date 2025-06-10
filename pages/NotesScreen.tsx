@@ -11,7 +11,12 @@ import {
 	Platform,
 	Modal,
 } from "react-native";
-import { useNavigation, useFocusEffect, useRoute, RouteProp } from "@react-navigation/native";
+import {
+	useNavigation,
+	useFocusEffect,
+	useRoute,
+	RouteProp,
+} from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +31,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type RootStackParamList = {
 	[ROUTES.RECIPE_DETAIL]: { recipeId: string };
 	[ROUTES.ADD_RECIPE_NOTES]: undefined;
+	[ROUTES.EDIT_RECIPE_NOTES]: { recipeId: string };
 	[ROUTES.NOTES]: { fromCollection?: boolean };
 	MainApp: { screen: string };
 };
@@ -57,7 +63,9 @@ const NotesScreen = () => {
 	const { user } = useAuth();
 
 	// Check if screen is accessed from a collection
-	const fromCollection = route.params ? (route.params as any).fromCollection : false;
+	const fromCollection = route.params
+		? (route.params as any).fromCollection
+		: false;
 
 	// Log untuk debugging
 	console.log("Route params:", route.params);
@@ -133,12 +141,21 @@ const NotesScreen = () => {
 		setShowActionSheet(false);
 		setShowCollectionPicker(true);
 	};
-
 	// Handle view recipe details
 	const handleViewRecipe = () => {
 		if (selectedRecipe) {
 			setShowActionSheet(false);
 			handleRecipePress(selectedRecipe.id);
+		}
+	};
+
+	// Handle edit recipe
+	const handleEditRecipe = () => {
+		if (selectedRecipe) {
+			setShowActionSheet(false);
+			navigation.navigate(ROUTES.EDIT_RECIPE_NOTES, {
+				recipeId: selectedRecipe.id,
+			});
 		}
 	};
 
@@ -172,7 +189,10 @@ const NotesScreen = () => {
 								// Check for foreign key constraint error (recipe is in a collection)
 								if (error) {
 									// Check if it's a foreign key constraint error
-									if (error.code === "23503" && error.message.includes("collection_recipes")) {
+									if (
+										error.code === "23503" &&
+										error.message.includes("collection_recipes")
+									) {
 										Alert.alert(
 											"Cannot Delete Recipe",
 											"This recipe is currently in one or more collections. Please remove it from all collections first before deleting it.",
@@ -180,7 +200,7 @@ const NotesScreen = () => {
 												{
 													text: "OK",
 													style: "default",
-												}
+												},
 											]
 										);
 										return;
@@ -246,14 +266,18 @@ const NotesScreen = () => {
 	// Empty state when no recipes found during search
 	const renderNoSearchResults = () => (
 		<View className='flex-1 justify-center items-center px-6 py-12'>
-			<View className="items-center">
-				<View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
-					<Ionicons name="search-outline" size={40} color="#9CA3AF" />
+			<View className='items-center'>
+				<View className='w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4'>
+					<Ionicons
+						name='search-outline'
+						size={40}
+						color='#9CA3AF'
+					/>
 				</View>
-				<Text className="text-xl font-bold text-gray-800 mb-2 text-center">
+				<Text className='text-xl font-bold text-gray-800 mb-2 text-center'>
 					No Recipes Found
 				</Text>
-				<Text className="text-gray-500 text-center leading-5">
+				<Text className='text-gray-500 text-center leading-5'>
 					No recipes match your search for "{searchQuery}"
 				</Text>
 			</View>
@@ -380,7 +404,7 @@ const NotesScreen = () => {
 			<Modal
 				visible={showActionSheet}
 				transparent={true}
-				animationType="slide"
+				animationType='slide'
 				onRequestClose={closeActionSheet}
 			>
 				<TouchableOpacity
@@ -395,7 +419,10 @@ const NotesScreen = () => {
 									{selectedRecipe.title}
 								</Text>
 								{selectedRecipe.description && (
-									<Text className='text-gray-500 text-sm' numberOfLines={2}>
+									<Text
+										className='text-gray-500 text-sm'
+										numberOfLines={2}
+									>
 										{selectedRecipe.description}
 									</Text>
 								)}
@@ -408,41 +435,100 @@ const NotesScreen = () => {
 								onPress={handleViewRecipe}
 							>
 								<View className='w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-3'>
-									<Ionicons name='eye-outline' size={20} color='white' />
+									<Ionicons
+										name='eye-outline'
+										size={20}
+										color='white'
+									/>
 								</View>
 								<View className='flex-1'>
-									<Text className='font-semibold text-blue-800'>View Recipe</Text>
-									<Text className='text-blue-600 text-sm'>See full recipe details</Text>
+									<Text className='font-semibold text-blue-800'>
+										View Recipe
+									</Text>
+									<Text className='text-blue-600 text-sm'>
+										See full recipe details
+									</Text>
 								</View>
-								<Ionicons name='chevron-forward' size={20} color='#3B82F6' />
+								<Ionicons
+									name='chevron-forward'
+									size={20}
+									color='#3B82F6'
+								/>
 							</TouchableOpacity>
-
 							<TouchableOpacity
 								className='flex-row items-center p-4 bg-orange-50 rounded-xl'
 								onPress={handleAddToCollection}
 							>
 								<View className='w-10 h-10 bg-orange-500 rounded-full items-center justify-center mr-3'>
-									<Ionicons name='library-outline' size={20} color='white' />
+									<Ionicons
+										name='library-outline'
+										size={20}
+										color='white'
+									/>
 								</View>
 								<View className='flex-1'>
-									<Text className='font-semibold text-orange-800'>Add to Collection</Text>
-									<Text className='text-orange-600 text-sm'>Organize in your collections</Text>
+									<Text className='font-semibold text-orange-800'>
+										Add to Collection
+									</Text>
+									<Text className='text-orange-600 text-sm'>
+										Organize in your collections
+									</Text>
 								</View>
-								<Ionicons name='chevron-forward' size={20} color='#F97316' />
+								<Ionicons
+									name='chevron-forward'
+									size={20}
+									color='#F97316'
+								/>
 							</TouchableOpacity>
-
+							<TouchableOpacity
+								className='flex-row items-center p-4 bg-green-50 rounded-xl'
+								onPress={handleEditRecipe}
+							>
+								<View className='w-10 h-10 bg-green-500 rounded-full items-center justify-center mr-3'>
+									<Ionicons
+										name='pencil-outline'
+										size={20}
+										color='white'
+									/>
+								</View>
+								<View className='flex-1'>
+									<Text className='font-semibold text-green-800'>
+										Edit Recipe
+									</Text>
+									<Text className='text-green-600 text-sm'>
+										Make changes to your recipe
+									</Text>
+								</View>
+								<Ionicons
+									name='chevron-forward'
+									size={20}
+									color='#10B981'
+								/>
+							</TouchableOpacity>
 							<TouchableOpacity
 								className='flex-row items-center p-4 bg-red-50 rounded-xl'
 								onPress={handleDeleteRecipe}
 							>
 								<View className='w-10 h-10 bg-red-500 rounded-full items-center justify-center mr-3'>
-									<Ionicons name='trash-outline' size={20} color='white' />
+									<Ionicons
+										name='trash-outline'
+										size={20}
+										color='white'
+									/>
 								</View>
 								<View className='flex-1'>
-									<Text className='font-semibold text-red-800'>Delete Recipe</Text>
-									<Text className='text-red-600 text-sm'>Remove this recipe permanently</Text>
+									<Text className='font-semibold text-red-800'>
+										Delete Recipe
+									</Text>
+									<Text className='text-red-600 text-sm'>
+										Remove this recipe permanently
+									</Text>
 								</View>
-								<Ionicons name='chevron-forward' size={20} color='#EF4444' />
+								<Ionicons
+									name='chevron-forward'
+									size={20}
+									color='#EF4444'
+								/>
 							</TouchableOpacity>
 						</View>
 
