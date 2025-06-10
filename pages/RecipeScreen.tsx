@@ -87,7 +87,7 @@ const RecipeScreen = ({ navigation }) => {
 				setLoading(true);
 			}
 
-			const promises = Array(1)
+			const promises = Array(8)
 				.fill(0)
 				.map(() => getRandomRecipe());
 			const randomRecipes = await Promise.all(promises);
