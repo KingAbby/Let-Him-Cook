@@ -211,7 +211,6 @@ const EditProfileScreen = () => {
       Alert.alert("Success", "Profile updated successfully", [
         {
           text: "OK",
-          onPress: () => navigation.goBack(),
         },
       ]);
     } catch (error: any) {
