@@ -11,7 +11,7 @@ export const ROUTES = {
 	RECIPE: "Recipe",
 	NOTES: "Notes",
 	PROFILE: "Profile",
-	
+
 	// Profile related screens
 	EDIT_PROFILE: "EditProfile",
 	MY_COLLECTION: "MyCollection",
@@ -20,9 +20,9 @@ export const ROUTES = {
 
 	// Recipe related screens
 	RECIPE_DETAIL: "RecipeDetail",
-
 	// Notes related screens
 	ADD_RECIPE_NOTES: "AddRecipeNotes",
+	EDIT_RECIPE_NOTES: "EditRecipeNotes",
 
 	// Header related screens
 	BOOKMARKS: "Bookmarks",

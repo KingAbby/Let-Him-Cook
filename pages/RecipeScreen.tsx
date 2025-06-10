@@ -8,6 +8,7 @@ import {
 	Dimensions,
 	Alert,
 	RefreshControl,
+	Text,
 } from "react-native";
 
 import {
@@ -90,9 +91,25 @@ const RecipeScreen = ({ navigation }) => {
 				.fill(0)
 				.map(() => getRandomRecipe());
 			const randomRecipes = await Promise.all(promises);
-			setRecipes(randomRecipes);
+
+			// Filter out invalid recipes (those with id === 0 which indicate API errors)
+			const validRecipes = randomRecipes.filter(
+				(recipe) => recipe && recipe.id !== 0
+			);
+
+			setRecipes(validRecipes);
+
+			// If we get no valid recipes, it might be due to API limit
+			if (validRecipes.length === 0 && randomRecipes.length > 0) {
+				Alert.alert(
+					"No Recipes Available",
+					"Unable to load recipes at this time. This could be due to API limits or connectivity issues.",
+					[{ text: "OK" }]
+				);
+			}
 		} catch (error) {
 			console.error(error);
+			setRecipes([]);
 		} finally {
 			setLoading(false);
 			setRefreshing(false);
@@ -204,7 +221,6 @@ const RecipeScreen = ({ navigation }) => {
 			} else {
 				// No results found
 				setRecipes([]);
-				console.log("No recipes found for: " + searchQuery);
 			}
 		} catch (error) {
 			console.error("Error searching recipes:", error);
@@ -222,99 +238,100 @@ const RecipeScreen = ({ navigation }) => {
 		}
 	};
 
-	// Recipe rendering is now handled by the RecipeGrid component	return (
-	<View className='flex-1 bg-gray-50'>
-		{/* Set status bar to translucent for content to appear underneath */}
-		<StatusBar
-			translucent
-			backgroundColor='transparent'
-			barStyle='dark-content'
-		/>
-		{/* Header positioned absolutely so it stays fixed at the top */}
-		<Header
-			title='Recipes'
-			rightIcon={
-				<TouchableOpacity onPress={onRefresh}>
-					<Ionicons
-						name='refresh-outline'
-						size={24}
-						color='black'
-					/>
-				</TouchableOpacity>
-			}
-			onRightIconPress={onRefresh}
-		/>
-		{/* Fixed Search Bar */}
-		<View
-			style={{
-				position: "absolute",
-				top: headerHeight,
-				left: 0,
-				right: 0,
-				zIndex: 10,
-				backgroundColor: "#f9fafb",
-			}}
-		>
-			<View className='px-5 py-4'>
-				<SearchBarTW
-					placeholder='Search recipes...'
-					value={searchQuery}
-					onChangeText={setSearchQuery}
-					onSubmit={handleSearch}
-					onClear={handleClearSearch}
-					containerClassName='w-full border border-blue-500'
-				/>
-			</View>
-			<View className='h-2 bg-gradient-to-b from-gray-100 to-transparent' />
-		</View>{" "}
-		{/* Main Content with padding top to accommodate the fixed header and search bar */}
-		{loading ? (
-			<View
-				className='flex-1 items-center justify-center'
-				style={{ paddingTop: headerHeight + 80 }}
-			>
-				<LoadingState isSearching={isSearching} />
-			</View>
-		) : recipes.length === 0 ? (
-			<View
-				className='flex-1 items-center justify-center'
-				style={{ paddingTop: headerHeight + 80 }}
-			>
-				<EmptyState
-					searchQuery={searchQuery}
-					onClearSearch={handleClearSearch}
-				/>
-			</View>
-		) : (
-			<ScrollView
-				className='flex-1'
-				contentContainerStyle={{ paddingTop: headerHeight + 84 }}
-				showsVerticalScrollIndicator={false}
-				refreshControl={
-					<RefreshControl
-						refreshing={refreshing}
-						onRefresh={onRefresh}
-						colors={["#3b82f6"]}
-						tintColor={"#3b82f6"}
-						progressViewOffset={headerHeight + 60}
-					/>
+	return (
+		<View className='flex-1 bg-gray-50'>
+			{/* Set status bar to translucent for content to appear underneath */}
+			<StatusBar
+				translucent
+				backgroundColor='transparent'
+				barStyle='dark-content'
+			/>
+			{/* Header positioned absolutely so it stays fixed at the top */}
+			<Header
+				title='Recipes'
+				rightIcon={
+					<TouchableOpacity onPress={onRefresh}>
+						<Ionicons
+							name='refresh-outline'
+							size={24}
+							color='black'
+						/>
+					</TouchableOpacity>
 				}
+				onRightIconPress={onRefresh}
+			/>
+			{/* Fixed Search Bar */}
+			<View
+				style={{
+					position: "absolute",
+					top: headerHeight,
+					left: 0,
+					right: 0,
+					zIndex: 10,
+					backgroundColor: "#f9fafb",
+				}}
 			>
-				<View className='px-5 py-6 flex-col gap-6'>
-					<RecipeGrid
-						recipes={recipes}
-						cardWidth={CARD_WIDTH}
-						bookmarkedRecipes={bookmarkedRecipes}
-						bookmarkLoading={bookmarkLoading}
-						toggleBookmark={toggleBookmark}
-						onPressRecipe={(recipe) =>
-							navigation.navigate("RecipeDetail", { recipe })
-						}
+				<View className='px-5 pt-4'>
+					<SearchBarTW
+						placeholder='Search recipes...'
+						value={searchQuery}
+						onChangeText={setSearchQuery}
+						onSubmit={handleSearch}
+						onClear={handleClearSearch}
+						containerClassName='w-full border border-blue-500'
 					/>
 				</View>
-			</ScrollView>
-		)}
-	</View>;
+				<View className='h-2 bg-gradient-to-b from-gray-100 to-transparent' />
+			</View>
+			{/* Main Content with padding top to accommodate the fixed header and search bar */}
+			{loading ? (
+				<View
+					className='flex-1 items-center justify-center'
+					style={{ paddingTop: headerHeight + 80 }}
+				>
+					<LoadingState isSearching={isSearching} />
+				</View>
+			) : recipes.length === 0 ? (
+				<View
+					className='flex-1 items-center justify-center'
+					style={{ paddingTop: headerHeight + 80 }}
+				>
+					<EmptyState
+						searchQuery={searchQuery}
+						onClearSearch={handleClearSearch}
+					/>
+				</View>
+			) : (
+				<ScrollView
+					className='flex-1'
+					contentContainerStyle={{ paddingTop: headerHeight + 84 }}
+					showsVerticalScrollIndicator={false}
+					refreshControl={
+						<RefreshControl
+							refreshing={refreshing}
+							onRefresh={onRefresh}
+							colors={["#3b82f6"]}
+							tintColor={"#3b82f6"}
+							progressViewOffset={headerHeight + 60}
+						/>
+					}
+				>
+					<View className='px-5 pb-6 flex-col gap-6'>
+						<RecipeGrid
+							recipes={recipes}
+							cardWidth={CARD_WIDTH}
+							bookmarkedRecipes={bookmarkedRecipes}
+							bookmarkLoading={bookmarkLoading}
+							toggleBookmark={toggleBookmark}
+							onPressRecipe={(recipe) =>
+								navigation.navigate("RecipeDetail", { recipe })
+							}
+						/>
+					</View>
+				</ScrollView>
+			)}
+		</View>
+	);
 };
 
 export default RecipeScreen;

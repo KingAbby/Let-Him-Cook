@@ -9,6 +9,7 @@ import OnboardingScreen from "../../pages/OnboardingScreen";
 import { ActivityIndicator, View } from "react-native";
 import ProfileScreen from "../../pages/ProfileScreen";
 import EditProfileScreen from "../../pages/EditProfileScreen";
+import EditRecipeNotes from "../../pages/EditRecipeNotes";
 import AddRecipeNotes from "../../pages/AddRecipeNotes";
 import RecipeDetailScreen from "../../pages/RecipeDetailScreen";
 import BookmarksScreen from "../../pages/BookMarksScreen";
@@ -139,6 +140,11 @@ const RootNavigator = () => {
 						<RootStack.Screen
 							name={ROUTES.RECIPE_DETAIL}
 							component={RecipeDetailScreen}
+						/>
+
+						<RootStack.Screen
+							name={ROUTES.EDIT_RECIPE_NOTES}
+							component={EditRecipeNotes}
 						/>
 						<RootStack.Screen
 							name={ROUTES.BOOKMARKS}
