@@ -26,6 +26,8 @@ import SearchBarTW from "../components/SearchBarTW";
 import CollectionPickerModal from "../components/collection/CollectionPickerModal";
 import { ROUTES } from "../components/navigation/routes";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import ShareButton from "../components/ShareButton";
+import { shareRecipeAsPDF } from "../utils/pdfGenerator";
 
 // Type for navigation parameters
 type RootStackParamList = {
@@ -422,7 +424,6 @@ const NotesScreen = () => {
 								)}
 							</View>
 						)}
-
 						<View className='flex-col gap-3'>
 							<TouchableOpacity
 								className='flex-row items-center p-4 bg-blue-50 rounded-xl'
@@ -447,6 +448,48 @@ const NotesScreen = () => {
 									name='chevron-forward'
 									size={20}
 									color='#3B82F6'
+								/>
+							</TouchableOpacity>
+							<TouchableOpacity
+								className='flex-row items-center p-4 bg-purple-50 rounded-xl'
+								onPress={() => {
+									setShowActionSheet(false);
+									if (selectedRecipe) {
+										const recipe = {
+											...selectedRecipe,
+											isMyRecipe: true,
+										};
+										// Use ShareButton's functionality directly here
+										shareRecipeAsPDF(recipe).catch((err) => {
+											console.error("Failed to share recipe:", err);
+											Alert.alert(
+												"Sharing Failed",
+												"There was a problem sharing this recipe. Please try again later.",
+												[{ text: "OK" }]
+											);
+										});
+									}
+								}}
+							>
+								<View className='w-10 h-10 bg-purple-500 rounded-full items-center justify-center mr-3'>
+									<Ionicons
+										name='share-social-outline'
+										size={20}
+										color='white'
+									/>
+								</View>
+								<View className='flex-1'>
+									<Text className='font-semibold text-purple-800'>
+										Share Recipe
+									</Text>
+									<Text className='text-purple-600 text-sm'>
+										Share as PDF to other apps
+									</Text>
+								</View>
+								<Ionicons
+									name='chevron-forward'
+									size={20}
+									color='#8B5CF6'
 								/>
 							</TouchableOpacity>
 							<TouchableOpacity
@@ -525,7 +568,6 @@ const NotesScreen = () => {
 								/>
 							</TouchableOpacity>
 						</View>
-
 						<TouchableOpacity
 							className='mt-4 p-3 items-center'
 							onPress={closeActionSheet}

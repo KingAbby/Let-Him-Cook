@@ -23,6 +23,7 @@ import RecipeHeader from "../components/recipe/RecipeHeader";
 import RecipeMeta from "../components/recipe/RecipeMeta";
 import IngredientsList from "../components/recipe/IngredientsList";
 import InstructionsList from "../components/recipe/InstructionsList";
+import ShareRecipeButton from "../components/ShareRecipeButton";
 
 interface RouteParams {
 	recipeId?: string;
@@ -75,6 +76,7 @@ const RecipeDetailScreen = () => {
 	>([]);
 	const [loading, setLoading] = useState(true);
 	const [isSpoonacularRecipe, setIsSpoonacularRecipe] = useState(false);
+
 	useEffect(() => {
 		if (params.recipe) {
 			// Handle Spoonacular recipe
@@ -140,7 +142,9 @@ const RecipeDetailScreen = () => {
 			month: "long",
 			day: "numeric",
 		});
-	}; // Render Spoonacular recipe content
+	};
+
+	// Render Spoonacular recipe content
 	const renderSpoonacularContent = () => {
 		if (!spoonacularRecipe) return null;
 
@@ -199,6 +203,7 @@ const RecipeDetailScreen = () => {
 			</ScrollView>
 		);
 	};
+
 	if (loading) {
 		return (
 			<View className='flex-1 items-center justify-center'>
@@ -237,6 +242,14 @@ const RecipeDetailScreen = () => {
 				title={isSpoonacularRecipe ? "Recipe Details" : "My Recipe Details"}
 				showBackButton={true}
 				showBookmark={false}
+				rightComponent={
+					<ShareRecipeButton
+						recipe={isSpoonacularRecipe ? spoonacularRecipe : recipe}
+						isSpoonacularRecipe={isSpoonacularRecipe}
+						spoonacularIngredients={spoonacularIngredients}
+						spoonacularInstructions={spoonacularInstructions}
+					/>
+				}
 			/>
 			{isSpoonacularRecipe ? (
 				// Render Spoonacular recipe content
