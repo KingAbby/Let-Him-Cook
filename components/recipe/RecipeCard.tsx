@@ -138,7 +138,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 							{/* Servings */}
 							<View className='flex-row items-center'>
 								<Ionicons
-									name='people-outline'
+									name='restaurant-outline'
 									size={12}
 									color='#e5e7eb'
 								/>

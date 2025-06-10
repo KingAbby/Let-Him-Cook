@@ -105,7 +105,6 @@ const RecipeDetailScreen = () => {
 			setSpoonacularIngredients(ingredientsData);
 			setSpoonacularInstructions(instructionsData);
 		} catch (error) {
-			console.error("Error fetching Spoonacular details:", error);
 			Alert.alert("Error", "Failed to load complete recipe details");
 		} finally {
 			setLoading(false);
@@ -122,14 +121,12 @@ const RecipeDetailScreen = () => {
 				.single();
 
 			if (error) {
-				console.error("Error fetching recipe:", error);
 				Alert.alert("Error", "Failed to load recipe details");
 				return;
 			}
 
 			setRecipe(data);
 		} catch (error) {
-			console.error("Error in fetchRecipeDetails:", error);
 			Alert.alert("Error", "Something went wrong while loading the recipe");
 		} finally {
 			setLoading(false);

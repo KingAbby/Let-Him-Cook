@@ -65,7 +65,6 @@ const CollectionPickerModal: React.FC<CollectionPickerModalProps> = ({
 			if (error) throw error;
 			setCollections(data || []);
 		} catch (error) {
-			console.error("Error fetching collections:", error);
 			Alert.alert("Error", "Failed to load collections");
 		} finally {
 			setLoading(false);
@@ -117,7 +116,6 @@ const CollectionPickerModal: React.FC<CollectionPickerModalProps> = ({
 			onSuccess?.();
 			onClose();
 		} catch (error) {
-			console.error("Error adding recipe to collection:", error);
 			Alert.alert("Error", "Failed to add recipe to collection");
 		} finally {
 			setAdding(null);
